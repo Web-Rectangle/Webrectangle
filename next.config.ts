@@ -1,6 +1,10 @@
+import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Articles under app/resources are authored as .mdx alongside .tsx routes.
+  pageExtensions: ['ts', 'tsx', 'mdx'],
+
   // `standalone` emits a self-contained server bundle in .next/standalone,
   // which is what the Dockerfile copies. Vercel ignores this and uses its own
   // build output, so setting it unconditionally is safe for both targets.
@@ -39,4 +43,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);
