@@ -1,19 +1,15 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { FlatCompat } from '@eslint/eslintrc';
+// eslint-config-next v16 ships native flat configs, so the legacy FlatCompat
+// bridge is neither needed nor compatible here (it throws on the plugin graph).
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({ baseDirectory: __dirname });
 
 const config = [
   {
-    ignores: ['.next/**', 'node_modules/**', 'legacy/**', 'next-env.d.ts'],
+    ignores: ['.next/**', 'node_modules/**', 'legacy/**', 'next-env.d.ts', 'public/**'],
   },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   {
     plugins: { 'simple-import-sort': simpleImportSort },
     rules: {
