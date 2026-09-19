@@ -1,0 +1,233 @@
+/*
+ * Glass material system + the background layers that make glass legible.
+ *
+ * WHY: glass only reads as glass when something interesting sits behind it.
+ * The legacy site already had three glass elements (the sticky header, the
+ * floating stat cards and the project chips); this file systematises that
+ * instinct into three tiers and gives them a backdrop worth refracting.
+ *
+ * LAYER MODEL (back to front):
+ *   0  base surface            .............  bg-surface / bg-surface-alt
+ *   1  44px brand grid         .............  .bg-grid
+ *   2  drifting aurora blooms  .............  .bg-aurora
+ *   3  3D canvas (hero only)   .............  components/three
+ *   4  glass panels + content  .............  .glass-sm / .glass-md / .glass-dark
+ *
+ * PERFORMANCE CONTRACT:
+ *   - backdrop-filter is expensive. Keep at most ~8 glass elements visible at
+ *     once. Section-level audits matter more than individual ones.
+ *   - Never animate backdrop-filter itself. Animate opacity/transform only.
+ *   - will-change is applied only while an element is actually animating.
+ */
+
+@layer components {
+  /* ---------------------------------------------------------------- */
+  /* Glass tiers                                                      */
+  /* ---------------------------------------------------------------- */
+
+  /* Tier 1: chips, badges, nav pills. Light blur, cheap. */
+  .glass-sm {
+    background: var(--glass-bg-sm);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 2px 8px rgb(10 15 30 / 0.05);
+  }
+
+  /* Tier 2: floating creator cards, stat pills, the hero search bar.
+     This is the workhorse - the inset top highlight is what sells the
+     material, so it is not optional. */
+  .glass-md {
+    background: var(--glass-bg-md);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-glass);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--shadow-glass);
+  }
+
+  /* Tier 3: glass sitting on the dark CTA band or an inverted panel. */
+  .glass-dark {
+    background: rgb(255 255 255 / 0.1);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgb(255 255 255 / 0.22);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+  }
+
+  /*
+   * Fallback for engines without backdrop-filter (older Firefox builds, some
+   * Android webviews). Without this the panels render as barely-tinted
+   * rectangles and text contrast collapses, so we go fully opaque.
+   */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-sm,
+    .glass-md {
+      background: var(--glass-bg-solid);
+      border-color: var(--border);
+    }
+
+    .glass-dark {
+      background: rgb(1 51 126 / 0.85);
+      border-color: rgb(255 255 255 / 0.3);
+    }
+  }
+
+  /*
+   * Opt-out for users who ask for less transparency (macOS "Reduce
+   * transparency", Windows equivalents). Accessibility, not decoration.
+   */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-sm,
+    .glass-md {
+      background: var(--glass-bg-solid);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: var(--border);
+    }
+
+    .glass-dark {
+      background: rgb(1 51 126 / 0.92);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+
+  /*
+   * Panels that carry paragraph-length copy need more opacity than the
+   * decorative tiers. Applied alongside .glass-md when text density is high.
+   * This is the contrast escape hatch referenced in the spec.
+   */
+  .glass-readable {
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Background layers                                                */
+  /* ---------------------------------------------------------------- */
+
+  /*
+   * Layer 1 - the 44px brand grid, carried over verbatim from the legacy
+   * hero. Masked so it fades out at the edges rather than stopping abruptly.
+   */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 100% 70% at 50% 40%, #000 45%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 100% 70% at 50% 40%, #000 45%, transparent 100%);
+  }
+
+  /* Variant that fades downward only, for mid-page sections. */
+  .bg-grid-fade-y {
+    mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 100%);
+  }
+
+  /*
+   * Layer 2 - soft aurora blooms. Deliberately restrained: three blurred
+   * radials at low opacity on a very slow drift. The brief warns against
+   * "excessive gradients", so this should read as atmosphere, not decoration.
+   */
+  .bg-aurora {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .bg-aurora::before,
+  .bg-aurora::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    will-change: transform;
+  }
+
+  .bg-aurora::before {
+    width: 46vw;
+    height: 46vw;
+    max-width: 620px;
+    max-height: 620px;
+    top: -12%;
+    right: -8%;
+    background: var(--aurora-1);
+    animation: aurora-drift-a 34s ease-in-out infinite alternate;
+  }
+
+  .bg-aurora::after {
+    width: 38vw;
+    height: 38vw;
+    max-width: 520px;
+    max-height: 520px;
+    bottom: -16%;
+    left: -6%;
+    background: var(--aurora-2);
+    animation: aurora-drift-b 42s ease-in-out infinite alternate;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                          */
+/* ------------------------------------------------------------------ */
+
+/* Legacy `floaty` - 6s bob used on the hero illustration and stat cards.
+   Reused here for floating glass panels. Stagger with animation-delay. */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Legacy WhatsApp FAB pulse ring. */
+@keyframes wa-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes aurora-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-6%, 8%, 0) scale(1.12);
+  }
+}
+
+@keyframes aurora-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  to {
+    transform: translate3d(7%, -6%, 0) scale(1);
+  }
+}
+
+/* Indeterminate shimmer for skeleton loaders. */
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}

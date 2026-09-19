@@ -1,1 +1,153 @@
 @import 'tailwindcss';
+@import '../styles/tokens.css';
+@import '../styles/glass.css';
+
+/* ------------------------------------------------------------------ */
+/* Base                                                               */
+/* ------------------------------------------------------------------ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Stop anchor jumps from landing under the sticky header. */
+    scroll-padding-top: calc(var(--header-h) + 24px);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--surface);
+    color: var(--body);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Aurora blooms extend past the viewport; without this they create a
+       horizontal scrollbar on narrow screens. */
+    overflow-x: hidden;
+  }
+
+  /* Legacy heading treatment - tight tracking, tight leading, heavy weight.
+     This is a large part of what makes the brand recognisable. */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    color: var(--ink);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Metrics must not jitter as digits change during count-up animations. */
+  .tabular,
+  [data-metric] {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+
+  /* Legacy focus ring. Applied globally so every interactive element inherits
+     a visible, consistent indicator. */
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Only suppress the ring for pointer users, never for keyboard users. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  /* Give the themed scrollbar the brand treatment without hijacking scroll. */
+  * {
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Layout primitives                                                  */
+/* ------------------------------------------------------------------ */
+
+@layer components {
+  .container-wr {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--container-pad);
+  }
+
+  /*
+   * Legacy section rhythm was 96px desktop / 68px mobile. The brief called the
+   * old page "unnecessarily long", so the fix is fewer sections rather than
+   * tighter padding - the rhythm itself was fine.
+   */
+  .section-y {
+    padding-block: 68px;
+  }
+
+  @media (min-width: 768px) {
+    .section-y {
+      padding-block: 96px;
+    }
+  }
+
+  /* Below-the-fold sections skip layout/paint until near the viewport. */
+  .defer-paint {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                             */
+/* ------------------------------------------------------------------ */
+
+@layer utilities {
+  .animate-floaty {
+    animation: floaty 6s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--border) 60%, transparent) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+}
+
+/*
+ * Reduced motion. The legacy site killed all animation under this query and we
+ * keep that behaviour, extended to cover the 3D canvas (which is additionally
+ * gated in JS - see components/three/use-scene-gate.ts, since CSS alone cannot
+ * stop a WebGL render loop).
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

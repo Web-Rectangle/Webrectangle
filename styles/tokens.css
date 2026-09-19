@@ -1,0 +1,239 @@
+/*
+ * WebRectangle design tokens - the single source of truth for colour,
+ * elevation, radius and typography.
+ *
+ * WHY THESE EXACT VALUES:
+ * The previous site (legacy/indexV2.html) was a digital-agency site being
+ * repositioned, not redesigned. Its palette maps onto the new brand identity
+ * almost one-to-one, so we inherit rather than reinvent:
+ *
+ *   legacy --blue      #1B5BFF  ->  --brand-500  #0165FB  (brand mandate)
+ *   legacy --blue-dark #0B3ED9  ->  --brand-700  #0142A6
+ *   legacy --blue-soft #EAF0FF  ->  --brand-100  #E8F1FF  (brand mandate)
+ *   legacy --bg-alt    #F6F8FB  ->  --surface-alt #F7F9FC (brand mandate)
+ *   legacy --ink       #0A0F1E  ->  unchanged (already the "dark navy" asked for)
+ *   legacy --body      #5A6472  ->  unchanged
+ *   legacy --border    #E8EBF0  ->  unchanged
+ *
+ * STRUCTURE:
+ *   1. Raw palette      - fixed hex values, never flip between themes
+ *   2. Semantic tokens  - what components actually consume; these DO flip
+ *   3. @theme inline    - exposes semantic tokens as Tailwind utilities
+ *
+ * Components must consume semantic tokens (bg-surface, text-ink) rather than
+ * raw palette values, otherwise dark mode breaks.
+ */
+
+/* Class-based dark mode, driven by next-themes `attribute="class"`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/* 1. RAW PALETTE - fixed across themes                                */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Brand ramp. 500 and 100 are mandated by brand guidelines; the rest is a
+     perceptually even ramp derived from them. */
+  --brand-50: #f0f6ff;
+  --brand-100: #e8f1ff;
+  --brand-200: #cfe0ff;
+  --brand-300: #a6c6ff;
+  --brand-400: #5b9bfd;
+  --brand-500: #0165fb;
+  --brand-600: #0153d1;
+  --brand-700: #0142a6;
+  --brand-800: #01337e;
+  --brand-900: #04255a;
+
+  /* Neutrals, carried over from the legacy site. */
+  --neutral-0: #ffffff;
+  --neutral-25: #f7f9fc;
+  --neutral-50: #f2f5fa;
+  --neutral-100: #e8ebf0;
+  --neutral-300: #b9c0cb;
+  --neutral-400: #9aa3af;
+  --neutral-500: #5a6472;
+  --neutral-700: #2c3653;
+  --neutral-800: #141c33;
+  --neutral-900: #0a0f1e;
+  --neutral-950: #060a13;
+
+  /* Functional. Used sparingly - the brief warns against too many colours. */
+  --star: #ffb800;
+  --whatsapp: #25d366;
+  --positive: #137a3d;
+  --positive-soft: #e8f9ef;
+  --warning: #9a6700;
+  --warning-soft: #fff6e0;
+  --critical: #b42318;
+  --critical-soft: #fee4e2;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. SEMANTIC TOKENS - light theme                                    */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Surfaces */
+  --surface: var(--neutral-0);
+  --surface-alt: var(--neutral-25);
+  --surface-raised: var(--neutral-0);
+  --surface-inverse: var(--neutral-900);
+
+  /* Text */
+  --ink: var(--neutral-900);
+  --body: var(--neutral-500);
+  --muted: var(--neutral-400);
+  --ink-inverse: var(--neutral-0);
+
+  /* Lines */
+  --border: var(--neutral-100);
+  --border-strong: var(--neutral-300);
+
+  /* Accent. On dark we lift to brand-400 so it keeps 4.5:1 against a dark
+     surface - brand-500 is too deep to read as a text colour there. */
+  --accent: var(--brand-500);
+  --accent-hover: var(--brand-700);
+  --accent-soft: var(--brand-100);
+  --accent-softer: var(--brand-50);
+  --accent-contrast: #ffffff;
+
+  /* Glass. Tuned per theme because the material inverts completely. */
+  --glass-bg-sm: rgb(255 255 255 / 0.72);
+  --glass-bg-md: rgb(255 255 255 / 0.78);
+  --glass-bg-solid: rgb(255 255 255 / 0.96);
+  --glass-border: rgb(255 255 255 / 0.7);
+  --glass-highlight: rgb(255 255 255 / 0.95);
+
+  /* Background decoration layers */
+  --grid-line: rgb(1 101 251 / 0.045);
+  --aurora-1: rgb(91 155 253 / 0.14);
+  --aurora-2: rgb(1 101 251 / 0.1);
+  --aurora-3: rgb(166 198 255 / 0.16);
+
+  /* Elevation - legacy values, plus one tuned for glass. */
+  --shadow: 0 8px 30px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 16px 48px rgb(10 15 30 / 0.12);
+  --shadow-glass: 0 20px 60px rgb(1 101 251 / 0.1), 0 2px 8px rgb(10 15 30 / 0.04);
+  --shadow-accent: 0 10px 24px rgb(1 101 251 / 0.35);
+
+  /* Radii - legacy values, plus one for glass panels. */
+  --r-btn: 10px;
+  --r-card: 16px;
+  --r-glass: 22px;
+  --r-pill: 999px;
+
+  /* Layout */
+  --container-max: 1200px;
+  --container-pad: 24px;
+  --header-h: 76px;
+  --header-h-scrolled: 64px;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2b. SEMANTIC TOKENS - dark theme                                    */
+/* ------------------------------------------------------------------ */
+
+.dark {
+  --surface: #080c16;
+  --surface-alt: #0e1424;
+  --surface-raised: #121a2c;
+  --surface-inverse: var(--neutral-0);
+
+  --ink: #eef2f9;
+  --body: #9ba6b8;
+  --muted: #6b7687;
+  --ink-inverse: var(--neutral-900);
+
+  --border: rgb(255 255 255 / 0.09);
+  --border-strong: rgb(255 255 255 / 0.18);
+
+  --accent: var(--brand-400);
+  --accent-hover: var(--brand-300);
+  --accent-soft: rgb(1 101 251 / 0.16);
+  --accent-softer: rgb(1 101 251 / 0.08);
+  --accent-contrast: #05070d;
+
+  --glass-bg-sm: rgb(16 22 40 / 0.62);
+  --glass-bg-md: rgb(16 22 40 / 0.72);
+  --glass-bg-solid: rgb(14 20 36 / 0.97);
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-highlight: rgb(255 255 255 / 0.08);
+
+  --grid-line: rgb(91 155 253 / 0.06);
+  --aurora-1: rgb(1 101 251 / 0.18);
+  --aurora-2: rgb(1 101 251 / 0.12);
+  --aurora-3: rgb(4 37 90 / 0.4);
+
+  --shadow: 0 8px 30px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 16px 48px rgb(0 0 0 / 0.55);
+  --shadow-glass: 0 20px 60px rgb(0 0 0 / 0.45), 0 2px 8px rgb(0 0 0 / 0.3);
+  --shadow-accent: 0 10px 24px rgb(1 101 251 / 0.45);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. TAILWIND THEME MAPPING                                           */
+/* ------------------------------------------------------------------ */
+/*
+ * `@theme inline` keeps the var() reference instead of inlining the literal,
+ * which is what allows a single utility like `bg-surface` to resolve
+ * differently under `.dark`. Opacity modifiers still work because Tailwind v4
+ * composes them with color-mix().
+ */
+
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-inverse: var(--surface-inverse);
+
+  --color-ink: var(--ink);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-ink-inverse: var(--ink-inverse);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-softer: var(--accent-softer);
+  --color-accent-contrast: var(--accent-contrast);
+
+  --color-star: var(--star);
+  --color-whatsapp: var(--whatsapp);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-critical: var(--critical);
+  --color-critical-soft: var(--critical-soft);
+
+  --radius-btn: var(--r-btn);
+  --radius-card: var(--r-card);
+  --radius-glass: var(--r-glass);
+  --radius-pill: var(--r-pill);
+
+  --shadow-soft: var(--shadow);
+  --shadow-elevated: var(--shadow-lg);
+  --shadow-glass: var(--shadow-glass);
+  --shadow-accent: var(--shadow-accent);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Legacy easing. Every reveal in the old site used this curve; keeping it
+     is part of what makes the rebrand feel continuous. */
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+}
