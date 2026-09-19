@@ -1,0 +1,291 @@
+// WebRectangle database schema.
+//
+// STATUS: complete and ready to run, but not required for the site to work.
+// The app ships with an in-memory adapter (lib/repositories/memory.adapter.ts)
+// so a fresh clone runs with zero configuration. Activating this schema is the
+// entire "move to a real backend" procedure:
+//
+//   1. npm install @prisma/client
+//   2. set DATABASE_URL in .env
+//   3. npx prisma migrate dev
+//
+// lib/repositories/index.ts then resolves to the Prisma adapter automatically.
+// No component, page or Server Action changes.
+//
+// SCOPE NOTE: the Creator, Lead and WaitlistEntry models back the public site
+// today. Brand, Campaign, Invitation and Deliverable model the collaboration
+// lifecycle from the product brief - the marketing site only illustrates that
+// workflow, but the shapes are defined now so the product can be built against
+// them without a migration rewrite.
+//
+// Targets PostgreSQL: scalar list columns (String[]) are Postgres-only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Platform {
+  instagram
+  youtube
+}
+
+enum Category {
+  fashion
+  beauty
+  fitness
+  food
+  travel
+  technology
+  finance
+  education
+  lifestyle
+  gaming
+  business
+  automotive
+}
+
+enum ContentType {
+  reel
+  post
+  story
+  video
+  short
+}
+
+/// Presentational follower bands. These are groupings we control, not
+/// industry-standard definitions - the brand brief is explicit about not
+/// asserting fixed follower ranges as fact.
+enum Tier {
+  nano
+  micro
+  mid
+  macro
+}
+
+enum AgeBand {
+  AGE_13_17 @map("13-17")
+  AGE_18_24 @map("18-24")
+  AGE_25_34 @map("25-34")
+  AGE_35_44 @map("35-44")
+  AGE_45_PLUS @map("45+")
+}
+
+enum AudienceType {
+  brand
+  creator
+  other
+}
+
+enum LeadSource {
+  contact
+  brand_waitlist        @map("brand-waitlist")
+  creator_waitlist      @map("creator-waitlist")
+  discover_early_access @map("discover-early-access")
+  pricing
+}
+
+enum CampaignObjective {
+  awareness
+  engagement
+  product_launch @map("product-launch")
+  sales
+  traffic
+  ugc
+}
+
+/// Ordered lifecycle. The UI renders progress by position, so new states must
+/// be inserted at the correct point rather than appended.
+enum CampaignStatus {
+  draft
+  invited
+  accepted
+  negotiation
+  active
+  in_progress @map("in-progress")
+  submitted
+  review
+  revision
+  approved
+  published
+  completed
+}
+
+/// The three responses a creator can give to a collaboration invitation.
+enum InvitationStatus {
+  sent
+  accepted
+  rejected
+  changes_requested @map("changes-requested")
+}
+
+// ---------------------------------------------------------------------------
+// Creator side
+// ---------------------------------------------------------------------------
+
+model Creator {
+  id          String      @id @default(cuid())
+  handle      String      @unique
+  displayName String
+  platform    Platform
+  category    Category
+  niche       String
+  city        String
+  region      String
+  languages   String[]
+  followers   Int
+  /// Percentage, 0-100.
+  engagementRate Float
+  avgViews    Int
+  contentTypes ContentType[]
+
+  // Audience is flattened rather than a relation: it is always read with the
+  // creator, never queried independently, and a join would cost more than the
+  // normalisation is worth at this scale.
+  primaryAgeBand  AgeBand
+  primaryAgeShare Float
+  femaleShare     Float
+  topLocations    String[]
+
+  pastCollaborations Int     @default(0)
+  bio                String
+  tier               Tier
+
+  /// Set only once a creator has been reviewed by the WebRectangle team.
+  /// Never inferred automatically - see the fraud/quality-signals guidance.
+  verifiedAt DateTime?
+
+  invitations Invitation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Discovery filters almost always combine platform, category and location,
+  // so these carry compound indexes rather than single-column ones.
+  @@index([platform, category, city])
+  @@index([followers])
+  @@index([engagementRate])
+}
+
+// ---------------------------------------------------------------------------
+// Brand side
+// ---------------------------------------------------------------------------
+
+model Brand {
+  id        String     @id @default(cuid())
+  name      String
+  website   String?
+  industry  String?
+  city      String?
+  contactEmail String
+  campaigns Campaign[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Campaign {
+  id               String            @id @default(cuid())
+  name             String
+  brand            Brand             @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  brandId          String
+  objective        CampaignObjective
+  status           CampaignStatus    @default(draft)
+  productOrService String?
+  targetAudience   String?
+  locations        String[]
+  platforms        Platform[]
+  categories       Category[]
+
+  /// Stored in the minor unit (paise) as an integer. Never use a float for
+  /// money - rounding drift shows up in reporting and invoices.
+  budgetMinor Int?
+  currency    String @default("INR")
+
+  usageRights String?
+  notes       String?
+  deadline    DateTime?
+
+  deliverables Deliverable[]
+  invitations  Invitation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brandId, status])
+}
+
+model Deliverable {
+  id         String      @id @default(cuid())
+  campaign   Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  kind       ContentType
+  quantity   Int         @default(1)
+  dueDate    DateTime?
+  notes      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([campaignId])
+}
+
+model Invitation {
+  id         String           @id @default(cuid())
+  campaign   Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  creator    Creator          @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId  String
+  status     InvitationStatus @default(sent)
+  message    String?
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // A creator should not receive the same campaign invitation twice.
+  @@unique([campaignId, creatorId])
+  @@index([creatorId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Marketing site capture
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id       String       @id @default(cuid())
+  name     String
+  email    String
+  company  String?
+  phone    String?
+  audience AudienceType @default(brand)
+  message  String
+  source   LeadSource   @default(contact)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([email])
+}
+
+model WaitlistEntry {
+  id       String       @id @default(cuid())
+  email    String
+  name     String?
+  company  String?
+  audience AudienceType
+  source   LeadSource   @default(discover_early_access)
+
+  createdAt DateTime @default(now())
+
+  // One signup per email per audience; a person may legitimately join as both
+  // a brand and a creator.
+  @@unique([email, audience])
+}
