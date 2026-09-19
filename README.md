@@ -118,8 +118,14 @@ Resend email  →  Slack webhook  →  local JSONL (dev)  →  server log (alway
 ```
 
 If every channel is unconfigured the submission still reaches the server log, and the success
-state offers a prefilled WhatsApp handoff. Forms are real `<form action={serverAction}>` elements,
-so they work with JavaScript disabled.
+state offers a prefilled WhatsApp handoff.
+
+**Forms require JavaScript.** `useActionState` binds the Server Action client-side, so the
+server-rendered markup carries no `$ACTION_ID` field and a no-JS submit will not reach the server.
+React can progressively enhance this only with a `permalink` and a server-rendered result page per
+form, which is not worth building here. A visitor without JavaScript is still not stranded: the
+contact page's `mailto:` and WhatsApp links are plain anchors, and `POST /api/leads` exists for
+programmatic use.
 
 Anti-spam is a honeypot field plus a submit-timing check (both always on, no configuration) and
 in-memory IP rate limiting. Turnstile is wired behind an env flag for when that stops being enough.
@@ -208,6 +214,11 @@ Multi-stage, non-root, uses `output: 'standalone'`, with a healthcheck against `
 - **Partner logos are missing.** The four real logo files were never committed. `PartnerLogo`
   renders a neutral wordmark in their place — deliberately, since an absent asset must never be
   replaced with an invented brand. See [`public/logos/README.md`](public/logos/README.md).
+- **Forms need JavaScript.** See the data-layer section above. The `mailto:`, WhatsApp and
+  `POST /api/leads` paths do not.
+- **Lighthouse has not been run.** The build was verified, but no browser-based audit was
+  performed. Run `npx lighthouse http://localhost:3000 --view` against `npm run start` before
+  treating any performance figure as measured.
 - **Legal copy is not legal advice.** [`lib/content/legal.ts`](lib/content/legal.ts) describes what
   the product actually does, in plain English. Have a lawyer review before any material launch,
   particularly around DPDP Act obligations.

@@ -14,9 +14,16 @@ import type { AudienceType, LeadSource } from '@/lib/schemas/lead';
 /**
  * Enquiry form.
  *
- * Progressive enhancement is real here, not nominal: this is a plain `<form>`
- * bound to a Server Action, so it submits and succeeds with JavaScript
- * disabled. `useActionState` only adds the pending state and inline errors.
+ * JAVASCRIPT REQUIREMENT - measured, not assumed. `useActionState` binds the
+ * Server Action on the client, so the server-rendered markup carries
+ * `action=""` and no `$ACTION_ID` field. This form therefore needs JavaScript
+ * to submit. React can progressively enhance `useActionState` only when given
+ * a `permalink`, which needs a server-rendered result page per form; that is
+ * not worth building for an audience that is effectively all JS-enabled.
+ *
+ * What matters is that a visitor without JavaScript is not stranded: the
+ * contact page's mailto: and WhatsApp links are plain anchors and work with no
+ * scripting at all, so there is always a route to us.
  *
  * On success the form is replaced by a confirmation that also offers WhatsApp.
  * That is the visible half of the no-dropped-leads guarantee - if our email or

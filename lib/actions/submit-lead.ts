@@ -10,10 +10,12 @@ import { clientIpFrom, rateLimit } from '@/lib/services/rate-limit';
 /**
  * Server Actions behind every form on the site.
  *
- * PROGRESSIVE ENHANCEMENT: these are wired to real `<form action={...}>`
- * elements, so submission works with JavaScript disabled. The client
- * components layer validation and pending states on top, but nothing depends
- * on them.
+ * These are bound on the client via `useActionState`, so the forms require
+ * JavaScript to submit - see the note in components/forms/lead-form.tsx. The
+ * no-JS path is the plain mailto: and WhatsApp links on the contact page, and
+ * POST /api/leads for anything integrating programmatically. All three share
+ * the schema and the spam heuristics below, so they cannot validate
+ * differently.
  *
  * DEFENCE ORDER - cheapest checks first, so an abusive request is rejected
  * before it can cost us anything:
