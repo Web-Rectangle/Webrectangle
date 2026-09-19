@@ -10,8 +10,9 @@ import { Problem } from '@/components/sections/problem';
 import { Solution } from '@/components/sections/solution';
 import { WhyWebRectangle } from '@/components/sections/why-webrectangle';
 import { WorkedWith } from '@/components/sections/worked-with';
-import { finalCta } from '@/lib/content/home';
+import { faq, finalCta } from '@/lib/content/home';
 import { getSeedCreators } from '@/lib/repositories/memory.adapter';
+import { faqJsonLd, JsonLd, organisationJsonLd } from '@/lib/seo';
 
 /**
  * Homepage.
@@ -30,6 +31,12 @@ export default function HomePage() {
 
   return (
     <>
+      {/* Organisation and WebSite markup lives on the homepage only, since it
+          describes the site as a whole. FAQPage is here because this is where
+          the questions are rendered. */}
+      <JsonLd data={organisationJsonLd()} />
+      <JsonLd data={faqJsonLd(faq.items)} />
+
       <Hero />
       <WorkedWith />
       <Problem />

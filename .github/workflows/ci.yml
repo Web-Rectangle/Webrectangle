@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same branch makes the in-flight run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `ci` rather than `install`: fails on a lockfile mismatch instead of
+      # silently resolving different versions than were tested locally.
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      # Informational. Prints per-route JavaScript weight so a size regression
+      # is visible in the PR without gating the merge on it.
+      - name: Report bundle size
+        run: node scripts/measure-bundle.mjs
+
+      # Catches the failure mode the honesty constraint exists to prevent:
+      # someone adding a plausible-sounding statistic during a copy edit.
+      - name: Check for fabricated statistics
+        run: node scripts/check-honesty.mjs

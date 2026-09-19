@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+.data
+legacy
+*.md
+!README.md
+.env*
+!.env.example
+.vercel
+coverage
+.lighthouseci
+.DS_Store
