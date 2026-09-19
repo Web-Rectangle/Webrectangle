@@ -217,6 +217,16 @@
   }
 }
 
+/* Used by the WebGL hero as it fades in over the static fallback. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Mobile navigation drawer sliding in from the right edge. */
 @keyframes drawer-in {
   from {

@@ -1,4 +1,5 @@
 import { Eyebrow } from '@/components/brand/eyebrow';
+import { HeroVisual } from '@/components/three/hero-visual';
 import { BackgroundLayers } from '@/components/ui/background-layers';
 import { Button } from '@/components/ui/button';
 import { Highlight } from '@/components/ui/section-heading';
@@ -6,7 +7,6 @@ import { hero } from '@/lib/content/home';
 import { getSeedCreators } from '@/lib/repositories/memory.adapter';
 
 import { HeroDemo } from './hero-demo';
-import { HeroVisual } from './hero-visual';
 
 /**
  * Homepage hero.
