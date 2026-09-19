@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 
 import seed from '@/content/seed/creators.json';
+import { countFacets, matchesFilters, sortCreators } from '@/lib/creators/filter';
 import { type Creator, type CreatorFilters, creatorSchema } from '@/lib/schemas/creator';
 import type { Lead, LeadInput, WaitlistEntry, WaitlistInput } from '@/lib/schemas/lead';
 
 import type {
   CreatorRepository,
   CreatorSearchResult,
-  Facets,
   LeadRepository,
   Repositories,
   WaitlistRepository,
@@ -16,108 +16,33 @@ import type {
 /**
  * In-memory adapter, backed by seed JSON.
  *
- * This is the default and it is what makes `npm run dev` work immediately
+ * This is the default, and it is what makes `npm run dev` work immediately
  * after a clone with no environment configuration. The creators it returns are
  * illustrative sample profiles, not a real network - every surface rendering
  * them must also render <SampleDataNotice />.
  *
- * Filtering happens in JS over a small fixed array. That is fine at this size
- * and intentionally mirrors the query shape the Prisma adapter implements, so
- * behaviour stays identical across the swap.
+ * Filtering is delegated to lib/creators/filter.ts, the same pure module the
+ * client-side demos use, so server results and in-browser results cannot
+ * diverge.
  */
 
 /**
- * Seed data is validated once at module load. A malformed record is a build
- * time problem, not a runtime surprise in a request handler.
+ * Seed data is validated once at module load. A malformed record becomes a
+ * build-time failure rather than a runtime surprise in a request handler.
  */
 const CREATORS: Creator[] = creatorSchema.array().parse(seed);
 
-function matches(creator: Creator, f: CreatorFilters): boolean {
-  if (f.platforms?.length && !f.platforms.includes(creator.platform)) return false;
-  if (f.categories?.length && !f.categories.includes(creator.category)) return false;
-  if (f.cities?.length && !f.cities.includes(creator.city)) return false;
-  if (f.tiers?.length && !f.tiers.includes(creator.tier)) return false;
-
-  if (f.contentTypes?.length && !f.contentTypes.some((t) => creator.contentTypes.includes(t))) {
-    return false;
-  }
-  if (f.languages?.length && !f.languages.some((l) => creator.languages.includes(l))) {
-    return false;
-  }
-
-  if (f.minFollowers !== undefined && creator.followers < f.minFollowers) return false;
-  if (f.maxFollowers !== undefined && creator.followers > f.maxFollowers) return false;
-  if (f.minEngagement !== undefined && creator.engagementRate < f.minEngagement) return false;
-
-  if (f.q) {
-    const needle = f.q.toLowerCase();
-    const haystack = [
-      creator.displayName,
-      creator.handle,
-      creator.niche,
-      creator.city,
-      creator.region,
-      creator.category,
-    ]
-      .join(' ')
-      .toLowerCase();
-    if (!haystack.includes(needle)) return false;
-  }
-
-  return true;
-}
-
-/**
- * Relevance ordering for the default sort.
- *
- * Deliberately not "most followers first" - the product thesis is relevance
- * over reach, so engagement is weighted above audience size, with a mild
- * penalty for very large accounts where engagement typically thins out.
- */
-function relevanceScore(creator: Creator): number {
-  const engagement = creator.engagementRate * 10;
-  const reach = Math.log10(Math.max(creator.followers, 1));
-  return engagement + reach;
-}
-
-function sortCreators(items: Creator[], sort: CreatorFilters['sort']): Creator[] {
-  const sorted = [...items];
-  switch (sort) {
-    case 'followers-desc':
-      return sorted.sort((a, b) => b.followers - a.followers);
-    case 'followers-asc':
-      return sorted.sort((a, b) => a.followers - b.followers);
-    case 'engagement-desc':
-      return sorted.sort((a, b) => b.engagementRate - a.engagementRate);
-    case 'relevance':
-    default:
-      return sorted.sort((a, b) => relevanceScore(b) - relevanceScore(a));
-  }
-}
-
-function countFacets(items: Creator[]): Facets {
-  const facets: Facets = { platforms: {}, categories: {}, cities: {}, tiers: {} };
-
-  for (const c of items) {
-    facets.platforms[c.platform] = (facets.platforms[c.platform] ?? 0) + 1;
-    facets.categories[c.category] = (facets.categories[c.category] ?? 0) + 1;
-    facets.cities[c.city] = (facets.cities[c.city] ?? 0) + 1;
-    facets.tiers[c.tier] = (facets.tiers[c.tier] ?? 0) + 1;
-  }
-
-  return facets;
-}
-
 const creators: CreatorRepository = {
   async search(filters: CreatorFilters): Promise<CreatorSearchResult> {
-    const matched = CREATORS.filter((c) => matches(c, filters));
+    const matched = CREATORS.filter((c) => matchesFilters(c, filters));
     const sorted = sortCreators(matched, filters.sort);
 
     return {
       items: sorted.slice(0, filters.limit),
       total: matched.length,
-      // Facets are counted over the full dataset rather than the matched
-      // subset so option counts do not collapse to zero as filters narrow.
+      // Counted over the full dataset rather than the matched subset, so
+      // option counts in the filter rail do not collapse to zero as a user
+      // narrows their search.
       facets: countFacets(CREATORS),
     };
   },
@@ -138,13 +63,13 @@ const creators: CreatorRepository = {
 };
 
 /**
- * Leads captured without a database configured.
+ * Leads captured with no database configured.
  *
- * Held in a module-level array, which means they do not survive a restart -
- * that is acceptable only because lib/services/notify.ts always forwards the
- * submission somewhere durable (email, Slack, a local JSONL file, or a
- * WhatsApp handoff) before this ever runs. The array exists so the repository
- * contract is honoured, not as a storage strategy.
+ * Held in a module-level array, so they do not survive a restart. That is
+ * acceptable only because lib/services/notify.ts always forwards a submission
+ * somewhere durable (email, Slack, a local JSONL file, or a WhatsApp handoff)
+ * before this runs. The array exists to honour the repository contract, not as
+ * a storage strategy.
  */
 const capturedLeads: Lead[] = [];
 const capturedWaitlist: WaitlistEntry[] = [];
@@ -175,3 +100,14 @@ export const memoryRepositories: Repositories = {
   waitlist,
   adapter: 'memory',
 };
+
+/**
+ * Direct read of the seed set, for client components that filter locally.
+ *
+ * Bypasses the repository intentionally: the hero and discovery demos need a
+ * plain array to hand to the browser, and routing that through an async
+ * repository call would add a round trip for data that is already static.
+ */
+export function getSeedCreators(): Creator[] {
+  return CREATORS;
+}

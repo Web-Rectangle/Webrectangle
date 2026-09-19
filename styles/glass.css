@@ -217,6 +217,18 @@
   }
 }
 
+/* Mobile navigation drawer sliding in from the right edge. */
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Indeterminate shimmer for skeleton loaders. */
 @keyframes shimmer {
   from {

@@ -2,8 +2,8 @@
 
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 
+import { useIsMounted } from '@/lib/hooks/use-client-state';
 import { cn } from '@/lib/utils/cn';
 
 const OPTIONS = [
@@ -25,9 +25,7 @@ const OPTIONS = [
  */
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const mounted = useIsMounted();
 
   if (!mounted) {
     return <div aria-hidden="true" className={cn('h-9 w-[104px]', className)} />;

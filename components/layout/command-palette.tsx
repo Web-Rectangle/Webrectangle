@@ -1,27 +1,12 @@
 'use client';
 
-import { Command } from 'cmdk';
-import {
-  ArrowUpRight,
-  Compass,
-  FileText,
-  Mail,
-  MessageCircle,
-  Moon,
-  Search,
-  Sun,
-  Users,
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-
-import { primaryNav, whatsappLink } from '@/lib/content/site';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 
 /**
- * Event name used by other components to open the palette without needing a
- * shared store or context. Decoupled on purpose: the header's search button
- * should not force the whole header into the palette's render tree.
+ * Event name used by other components to open the palette without a shared
+ * store or context. Decoupled on purpose: the header's search button should
+ * not drag the whole header into the palette's render tree.
  */
 const OPEN_EVENT = 'wr:open-command-palette';
 
@@ -31,154 +16,51 @@ export function openCommandPalette(): void {
 }
 
 /**
- * Command palette, opened with Cmd/Ctrl-K.
+ * The palette's contents pull in cmdk and Radix Dialog - about 40 KB gzipped.
+ * Loading that on every page for a feature most visitors never trigger was the
+ * single largest item in the shared bundle, so it is fetched on first open
+ * instead. The import starts the moment the shortcut fires, and the chunk
+ * arrives well inside the time it takes to type a query.
+ */
+const CommandPaletteContent = dynamic(
+  () => import('./command-palette-content').then((m) => m.CommandPaletteContent),
+  { ssr: false },
+);
+
+/**
+ * Lightweight host for the command palette.
  *
- * Quality-of-life rather than decoration: it gives keyboard users a single
- * entry point to every page and the two contact channels without reaching for
- * the mouse, and it signals that this is a product built by people who use
- * products.
- *
- * Built on cmdk's Dialog, which brings focus trapping, Escape handling, scroll
- * locking and the correct ARIA combobox semantics with it - all things a
- * hand-rolled palette tends to get subtly wrong.
+ * All that ships on first load is this listener. It owns the open state and
+ * mounts the real palette only once it has been requested.
  */
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
-  const { setTheme, resolvedTheme } = useTheme();
+  /** Latches true on first open so the chunk is fetched once and kept. */
+  const [everOpened, setEverOpened] = useState(false);
 
   useEffect(() => {
+    const show = () => {
+      setEverOpened(true);
+      setOpen(true);
+    };
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
+        setEverOpened(true);
         setOpen((v) => !v);
       }
     };
 
-    const onExternalOpen = () => setOpen(true);
-
     document.addEventListener('keydown', onKeyDown);
-    document.addEventListener(OPEN_EVENT, onExternalOpen);
+    document.addEventListener(OPEN_EVENT, show);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener(OPEN_EVENT, onExternalOpen);
+      document.removeEventListener(OPEN_EVENT, show);
     };
   }, []);
 
-  // Close before navigating so the dialog does not linger over the new route.
-  const go = useCallback(
-    (href: string) => {
-      setOpen(false);
-      router.push(href);
-    },
-    [router],
-  );
+  if (!everOpened) return null;
 
-  return (
-    <Command.Dialog
-      open={open}
-      onOpenChange={setOpen}
-      label="Site command palette"
-      className="fixed inset-0 z-[90]"
-    >
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 bg-[rgb(10_15_30_/_0.45)] backdrop-blur-sm"
-        onClick={() => setOpen(false)}
-      />
-
-      <div className="glass-md glass-readable fixed top-1/2 left-1/2 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 overflow-hidden p-0 shadow-[var(--shadow-lg)]">
-        <div className="border-border flex items-center gap-3 border-b px-4">
-          <Search aria-hidden="true" className="text-muted size-4 shrink-0" />
-          <Command.Input
-            placeholder="Search pages and actions..."
-            className="text-ink placeholder:text-muted w-full bg-transparent py-4 text-[15px] outline-none"
-          />
-          <kbd className="border-border text-muted hidden rounded border px-1.5 py-0.5 text-[11px] font-semibold sm:block">
-            ESC
-          </kbd>
-        </div>
-
-        <Command.List className="max-h-[min(420px,60vh)] overflow-y-auto p-2">
-          <Command.Empty className="text-muted px-3 py-8 text-center text-sm">
-            Nothing matches that.
-          </Command.Empty>
-
-          <Command.Group
-            heading="Pages"
-            className="text-muted px-2 py-1.5 text-[11px] font-bold tracking-[0.1em] uppercase"
-          >
-            <Item onSelect={() => go('/')} icon={<Compass />} label="Home" />
-            {primaryNav.map((item) => (
-              <Item
-                key={item.href}
-                onSelect={() => go(item.href)}
-                icon={<Compass />}
-                label={item.label}
-                hint={item.description}
-              />
-            ))}
-            <Item onSelect={() => go('/about')} icon={<Users />} label="About" />
-            <Item onSelect={() => go('/contact')} icon={<Mail />} label="Contact" />
-          </Command.Group>
-
-          <Command.Group
-            heading="Actions"
-            className="text-muted px-2 py-1.5 text-[11px] font-bold tracking-[0.1em] uppercase"
-          >
-            <Item onSelect={() => go('/discover')} icon={<Search />} label="Find creators" />
-            <Item onSelect={() => go('/join/creator')} icon={<Users />} label="Join as a creator" />
-            <Item onSelect={() => go('/resources')} icon={<FileText />} label="Read the guides" />
-            <Item
-              onSelect={() => {
-                setOpen(false);
-                window.open(whatsappLink(), '_blank', 'noopener,noreferrer');
-              }}
-              icon={<MessageCircle />}
-              label="Message us on WhatsApp"
-              external
-            />
-            <Item
-              onSelect={() => {
-                setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
-                setOpen(false);
-              }}
-              icon={resolvedTheme === 'dark' ? <Sun /> : <Moon />}
-              label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            />
-          </Command.Group>
-        </Command.List>
-      </div>
-    </Command.Dialog>
-  );
-}
-
-function Item({
-  onSelect,
-  icon,
-  label,
-  hint,
-  external,
-}: {
-  onSelect: () => void;
-  icon: React.ReactNode;
-  label: string;
-  hint?: string;
-  external?: boolean;
-}) {
-  return (
-    <Command.Item
-      onSelect={onSelect}
-      className="text-ink data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14.5px] font-medium normal-case"
-    >
-      <span aria-hidden="true" className="text-muted [&_svg]:size-4">
-        {icon}
-      </span>
-      <span className="flex-1 tracking-normal">{label}</span>
-      {hint ? (
-        <span className="text-muted hidden text-[12.5px] font-normal sm:block">{hint}</span>
-      ) : null}
-      {external ? <ArrowUpRight aria-hidden="true" className="text-muted size-3.5" /> : null}
-    </Command.Item>
-  );
+  return <CommandPaletteContent open={open} onOpenChange={setOpen} />;
 }

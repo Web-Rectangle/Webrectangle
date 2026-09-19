@@ -1,16 +1,26 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'sonner';
+
+/**
+ * Sonner is only ever needed after a form submission, which is far past
+ * hydration. Loading it lazily keeps ~13 KB gzipped out of the chunk that
+ * every page - including the 404 - has to download before it can render.
+ *
+ * Safe against the "toast fires before Toaster mounts" race because nothing
+ * toasts on page load; the earliest possible toast follows a user action.
+ */
+const Toaster = dynamic(() => import('sonner').then((m) => m.Toaster), { ssr: false });
 
 /**
  * Client-side providers.
  *
- * Kept deliberately thin and mounted once in the root layout so that the rest
- * of the tree can stay as Server Components.
+ * Kept deliberately thin and mounted once in the root layout so the rest of
+ * the tree can stay as Server Components.
  *
- * `disableTransitionOnChange` suppresses the colour-transition flash that
- * otherwise sweeps every element when the theme flips.
+ * `disableTransitionOnChange` suppresses the colour-transition sweep that
+ * would otherwise run across every element when the theme flips.
  */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
