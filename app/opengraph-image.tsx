@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+// The edge runtime is deprecated in Next 16; next/og runs on Node without it.
 export const alt = 'WebRectangle - influencer marketing platform';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

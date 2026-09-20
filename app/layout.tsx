@@ -54,7 +54,8 @@ export const viewport: Viewport = {
     { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
     { media: '(prefers-color-scheme: dark)', color: '#080C16' },
   ],
-  colorScheme: 'light dark',
+  // `color-scheme` is set in styles/tokens.css, scoped to the theme class, so
+  // it tracks the theme the visitor actually chose rather than their OS.
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

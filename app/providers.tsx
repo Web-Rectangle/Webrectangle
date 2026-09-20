@@ -26,8 +26,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      // Light is the brand's primary presentation, so it is the default rather
+      // than deferring to the OS. `enableSystem={false}` keeps the toggle a
+      // genuine two-state control - with system detection on, next-themes
+      // resolves an implicit third state that the UI would not be showing.
+      defaultTheme="light"
+      enableSystem={false}
       disableTransitionOnChange
       storageKey="wr-theme"
     >

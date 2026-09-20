@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback } from 'react';
 
-import { primaryNav, whatsappLink } from '@/lib/content/site';
+import { primaryNav, secondaryNav, whatsappLink } from '@/lib/content/site';
 
 /**
  * Command palette contents.
@@ -89,7 +89,10 @@ export function CommandPaletteContent({
             className="text-muted px-2 py-1.5 text-[11px] font-bold tracking-[0.1em] uppercase"
           >
             <Item onSelect={() => go('/')} icon={<Compass />} label="Home" />
-            {primaryNav.map((item) => (
+            {/* Both navs, so pages kept out of the header - How It Works,
+                Pricing, Resources - are still one keystroke away. A search
+                tool that cannot find part of the site is a broken one. */}
+            {[...primaryNav, ...secondaryNav].map((item) => (
               <Item
                 key={item.href}
                 onSelect={() => go(item.href)}

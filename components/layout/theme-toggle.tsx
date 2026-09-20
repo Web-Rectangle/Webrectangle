@@ -1,6 +1,6 @@
 'use client';
 
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { useIsMounted } from '@/lib/hooks/use-client-state';
@@ -8,18 +8,22 @@ import { cn } from '@/lib/utils/cn';
 
 const OPTIONS = [
   { value: 'light', label: 'Light', Icon: Sun },
-  { value: 'system', label: 'System', Icon: Monitor },
   { value: 'dark', label: 'Dark', Icon: Moon },
 ] as const;
 
 /**
- * Three-way theme switch: light, system, dark.
+ * Light/dark theme switch.
  *
- * Rendered as a radiogroup rather than a single toggle so "follow my OS" stays
- * reachable - a two-state toggle silently strands anyone who wants the system
- * setting back.
+ * Two explicit choices with light as the default, rather than following the
+ * operating system. Light is the brand's primary presentation - the palette,
+ * the glass material and the product screenshots are all designed for it - so
+ * a first-time visitor on a dark-mode laptop should still see the site the way
+ * it was designed before choosing otherwise.
  *
- * The `mounted` gate exists because the resolved theme is unknown during SSR;
+ * Rendered as a radiogroup rather than a single switch so the current state is
+ * visible rather than inferred from which icon is showing.
+ *
+ * The `mounted` gate exists because the active theme is unknown during SSR;
  * rendering the real state before hydration would mismatch. A same-size
  * placeholder is emitted instead so the header does not shift.
  */
@@ -28,7 +32,7 @@ export function ThemeToggle({ className }: { className?: string }) {
   const mounted = useIsMounted();
 
   if (!mounted) {
-    return <div aria-hidden="true" className={cn('h-9 w-[104px]', className)} />;
+    return <div aria-hidden="true" className={cn('h-9 w-[72px]', className)} />;
   }
 
   return (

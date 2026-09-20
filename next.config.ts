@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
 
   reactStrictMode: true,
 
+  // Next 16 writes AGENTS.md and CLAUDE.md into the repo root on every build.
+  // This project documents itself in README.md, and generated files that
+  // reappear after deletion are noise in every diff.
+  agentRules: false,
+
   // Fail the production build on type errors rather than shipping them.
   // Next 16 removed the `eslint` config key; linting runs via `npm run lint`
   // and is enforced separately in CI.

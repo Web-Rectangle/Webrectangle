@@ -11,7 +11,10 @@ import type { FeatureStatus } from '@/components/ui/status-badge';
 export const hero = {
   eyebrow: 'Influencer marketing platform',
   headlineLead: 'Find the right creators.',
-  headlineHighlight: 'Build better campaigns.',
+  // The newline is load-bearing, not formatting: <Highlight> uses
+  // `white-space: pre-line` so the explicit break lets the box shrink to the
+  // longest line instead of stretching to the full column width.
+  headlineHighlight: 'Build better\ncampaigns.',
   subheadline:
     'Discover relevant creators, send structured collaboration invites, manage the work and measure what actually performed - in one place.',
   primaryCta: { label: 'Find Creators', href: '/discover' },

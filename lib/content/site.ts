@@ -24,12 +24,34 @@ export type NavItem = {
   description?: string;
 };
 
-/** Primary navigation. Product pages first, company pages in the footer. */
+/**
+ * Primary navigation.
+ *
+ * Deliberately three items. A visitor arriving cold is one of two people - a
+ * brand or a creator - and the fastest thing we can do is let them self-select,
+ * then hand them the product. Six items made that choice harder, not easier,
+ * and pushed the bar wide enough that labels wrapped onto two lines.
+ *
+ * How It Works, Pricing and Resources are still full pages; they are reached
+ * from the footer, from in-page calls to action, and from the command palette.
+ * See secondaryNav.
+ */
 export const primaryNav: readonly NavItem[] = [
   { label: 'For Brands', href: '/for-brands', description: 'Find creators and run campaigns' },
   { label: 'For Creators', href: '/for-creators', description: 'Get discovered by brands' },
-  { label: 'How It Works', href: '/how-it-works', description: 'Discovery through measurement' },
   { label: 'Discover Creators', href: '/discover', description: 'Try the discovery experience' },
+] as const;
+
+/**
+ * Real pages kept out of the top navigation.
+ *
+ * Not lesser content - these are reached once someone already knows what
+ * WebRectangle is, which is a different moment from the first five seconds the
+ * header has to serve. Indexed by the command palette and listed in the footer
+ * so nothing here becomes orphaned.
+ */
+export const secondaryNav: readonly NavItem[] = [
+  { label: 'How It Works', href: '/how-it-works', description: 'Discovery through measurement' },
   { label: 'Pricing', href: '/pricing', description: 'How working with us works' },
   { label: 'Resources', href: '/resources', description: 'Guides and playbooks' },
 ] as const;

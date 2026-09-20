@@ -68,10 +68,32 @@ export function SectionHeading({
  *
  * Inherited from the legacy `.hl` treatment. High-signal by design: use it
  * once per page, inside the main heading.
+ *
+ * ONE BOX, NO DEAD SPACE - the tricky part. A wrapped `inline-block` is sized
+ * by CSS shrink-to-fit, which resolves to the full available width whenever
+ * the text is too long to fit on one line. That is what leaves a slab of empty
+ * blue beside a short final line, and no combination of `w-fit`,
+ * `max-content` or `fit-content` avoids it: CSS has no way to shrink a wrapped
+ * box back to its longest rendered line.
+ *
+ * The fix is to make the break explicit. With `white-space: pre-line` the
+ * max-content width becomes the longest newline-delimited segment rather than
+ * the whole string, so shrink-to-fit lands exactly on the longest line and the
+ * rectangle hugs the text on all four sides.
+ *
+ * Author the break with a newline in the copy, e.g. 'Build better\ncampaigns.'
+ * in lib/content/home.ts. Text without a newline is unaffected, and on a
+ * viewport too narrow even for the longest segment it still wraps normally
+ * rather than overflowing.
+ *
+ * PADDING: `leading-[1.1]` is deliberately tight. Half-leading is baked into
+ * every line box, so at a looser line-height the visual gap above and below
+ * the glyphs would exceed the side padding and the box would read as
+ * vertically padded even with equal values on all four sides.
  */
 export function Highlight({ children }: { children: React.ReactNode }) {
   return (
-    <span className="bg-accent text-accent-contrast inline-block rounded-[12px] px-3.5 pb-1 leading-[1.15]">
+    <span className="bg-accent text-accent-contrast inline-block max-w-full rounded-[14px] p-4 leading-[1.1] whitespace-pre-line">
       {children}
     </span>
   );

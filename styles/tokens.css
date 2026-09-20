@@ -74,6 +74,15 @@
 /* ------------------------------------------------------------------ */
 
 :root {
+  /*
+   * Drives native UI - form controls, scrollbars, the canvas behind the page.
+   * Scoped to the theme class rather than declared once in a meta tag, because
+   * the site defaults to light regardless of the OS setting; a static
+   * declaration would leave a dark-mode browser rendering dark scrollbars over
+   * our light page.
+   */
+  color-scheme: light;
+
   /* Surfaces */
   --surface: var(--neutral-0);
   --surface-alt: var(--neutral-25);
@@ -135,6 +144,8 @@
 /* ------------------------------------------------------------------ */
 
 .dark {
+  color-scheme: dark;
+
   --surface: #080c16;
   --surface-alt: #0e1424;
   --surface-raised: #121a2c;
