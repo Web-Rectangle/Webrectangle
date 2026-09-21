@@ -14,14 +14,14 @@ import type { Creator, CreatorFilters } from '@/lib/schemas/creator';
 /**
  * Preset filters offered as one-tap chips.
  *
- * These mirror the worked example from the brand brief ("Find 20 Instagram
- * fitness creators in Delhi NCR with 20K-100K followers"), so the demo
- * demonstrates a real query a brand would actually run rather than an abstract
- * one.
+ * Kept to category, platform and follower band. Location is deliberately not
+ * among them: stacking a city on top of the other presets narrowed the sample
+ * set to a single card, which made the demo look empty rather than capable.
+ * Location filtering still exists in full on /discover, where a real result
+ * set can absorb it.
  */
 const PRESETS = [
   { id: 'fitness', label: 'Fitness', patch: { categories: ['fitness'] } },
-  { id: 'delhi', label: 'Delhi NCR', patch: { cities: ['Delhi NCR'] } },
   { id: 'instagram', label: 'Instagram', patch: { platforms: ['instagram'] } },
   { id: 'band', label: '20K-100K', patch: { minFollowers: 20_000, maxFollowers: 100_000 } },
 ] as const satisfies ReadonlyArray<{
@@ -30,7 +30,15 @@ const PRESETS = [
   patch: Partial<CreatorFilters>;
 }>;
 
-const RESULT_LIMIT = 3;
+/**
+ * One card is enough here.
+ *
+ * The hero's job is to prove this is a product, not to browse creators - a
+ * single card does that and keeps the fold short. The count line still reports
+ * the full number of matches, so it is clear more exist, and /discover is one
+ * click away for anyone who wants them.
+ */
+const RESULT_LIMIT = 1;
 
 /**
  * Interactive product demonstration in the hero.
@@ -46,7 +54,9 @@ const RESULT_LIMIT = 3;
  */
 export function HeroDemo({ creators }: { creators: Creator[] }) {
   const [query, setQuery] = useState('');
-  const [active, setActive] = useState<Set<string>>(new Set(['fitness', 'delhi']));
+  // Opens with one filter on, so the chips are visibly doing something without
+  // the result set collapsing to a single card.
+  const [active, setActive] = useState<Set<string>>(new Set(['fitness']));
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const reduced = useReducedMotion();
 

@@ -99,7 +99,7 @@ function Panels() {
         </Button>
       </Row>
 
-      <div className="from-brand-500 to-brand-700 flex flex-wrap items-center gap-4 rounded-[var(--r-card)] bg-gradient-to-br p-6">
+      <div className="from-brand-fill-from to-brand-fill-to flex flex-wrap items-center gap-4 rounded-[var(--r-card)] bg-gradient-to-br p-6">
         <Button variant="white" withArrow>
           On gradient
         </Button>

@@ -21,7 +21,7 @@ export function CtaBand({
   secondary: { label: string; href: string };
 }) {
   return (
-    <section className="from-brand-500 to-brand-700 relative overflow-hidden bg-gradient-to-br py-16">
+    <section className="from-brand-fill-from to-brand-fill-to relative overflow-hidden bg-gradient-to-br py-16">
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-[linear-gradient(to_right,rgb(255_255_255_/_0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(255_255_255_/_0.05)_1px,transparent_1px)] bg-[length:40px_40px]"

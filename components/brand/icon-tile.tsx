@@ -34,8 +34,10 @@ export function IconTile({
       className={cn(
         'flex shrink-0 items-center justify-center',
         SIZE[size],
+        // Gradient runs accent -> accent-secondary, which is blue-to-deeper-blue
+        // in light and blue-to-violet in dark. See styles/tokens.css.
         variant === 'gradient'
-          ? 'from-brand-500 to-brand-700 bg-gradient-to-br text-white [&_svg]:stroke-white'
+          ? 'from-brand-fill-from to-brand-fill-to bg-gradient-to-br text-white [&_svg]:stroke-white'
           : 'bg-accent-soft text-accent [&_svg]:stroke-current',
         className,
       )}

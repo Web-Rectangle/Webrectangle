@@ -85,6 +85,15 @@ enum AudienceType {
   other
 }
 
+/// Review state of an inbound submission, driven from the admin panel.
+/// Approving a creator unlocks the profile form that publishes them into
+/// discovery.
+enum SubmissionStatus {
+  pending
+  approved
+  declined
+}
+
 enum LeadSource {
   contact
   brand_waitlist        @map("brand-waitlist")
@@ -159,6 +168,16 @@ model Creator {
   bio                String
   tier               Tier
 
+  /// Distinguishes illustrative sample profiles from real creators published
+  /// through the admin panel. Only samples may be labelled as sample data.
+  origin CreatorOrigin @default(seed)
+
+  /// Admin-controlled listing state. `hidden` removes a profile from public
+  /// discovery without deleting it; `featuredOrder` drives manual ordering.
+  hidden        Boolean @default(false)
+  featured      Boolean @default(false)
+  featuredOrder Int?
+
   /// Set only once a creator has been reviewed by the WebRectangle team.
   /// Never inferred automatically - see the fraud/quality-signals guidance.
   verifiedAt DateTime?
@@ -173,6 +192,13 @@ model Creator {
   @@index([platform, category, city])
   @@index([followers])
   @@index([engagementRate])
+  // Public discovery always excludes hidden rows, so it leads the index.
+  @@index([hidden, featuredOrder])
+}
+
+enum CreatorOrigin {
+  seed
+  admin
 }
 
 // ---------------------------------------------------------------------------
@@ -269,9 +295,17 @@ model Lead {
   message  String
   source   LeadSource   @default(contact)
 
+  status     SubmissionStatus @default(pending)
+  reviewedAt DateTime?
+  /// Set once an approved creator submission has been published as a profile.
+  publishedCreatorId String?
+  /// Private to the admin panel; never shown to the person who submitted.
+  adminNote String?
+
   createdAt DateTime @default(now())
 
-  @@index([createdAt])
+  // The admin queue reads pending-first, so status leads the index.
+  @@index([status, createdAt])
   @@index([email])
 }
 
@@ -282,6 +316,9 @@ model WaitlistEntry {
   company  String?
   audience AudienceType
   source   LeadSource   @default(discover_early_access)
+
+  status     SubmissionStatus @default(pending)
+  reviewedAt DateTime?
 
   createdAt DateTime @default(now())
 

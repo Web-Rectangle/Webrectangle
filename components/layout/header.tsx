@@ -7,7 +7,8 @@ import { useState } from 'react';
 
 import { Logo } from '@/components/brand/logo';
 import { Button } from '@/components/ui/button';
-import { primaryNav } from '@/lib/content/site';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { type NavItem, primaryNav } from '@/lib/content/site';
 import { useScrolledPast } from '@/lib/hooks/use-client-state';
 import { cn } from '@/lib/utils/cn';
 
@@ -39,27 +40,40 @@ export function Header() {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-  const navLink = (href: string, label: string, description?: string, mobile = false) => (
+  const navLink = (item: NavItem, mobile = false) => (
     <Link
-      key={href}
-      href={href}
-      aria-current={isActive(href) ? 'page' : undefined}
+      key={item.href}
+      href={item.href}
+      aria-current={isActive(item.href) ? 'page' : undefined}
       onClick={mobile ? () => setDrawerOpen(false) : undefined}
       className={
         mobile
           ? cn(
-              'rounded-[10px] px-3 py-3 text-[16px] font-semibold transition-colors',
-              isActive(href) ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-accent-soft',
+              // 48px minimum height: comfortably above the 44px touch target
+              // floor, which the previous 12px vertical padding sat under.
+              'flex min-h-12 flex-col justify-center rounded-[10px] px-3 py-3 text-[16px] font-semibold transition-colors',
+              isActive(item.href) ? 'bg-accent-soft text-accent' : 'text-ink hover:bg-accent-soft',
             )
           : cn(
-              'text-[15px] font-medium transition-colors duration-200',
-              isActive(href) ? 'text-accent' : 'text-ink hover:text-accent',
+              'flex items-center gap-1.5 text-[15px] font-medium transition-colors duration-200',
+              isActive(item.href) ? 'text-accent' : 'text-ink hover:text-accent',
             )
       }
     >
-      {label}
-      {mobile && description ? (
-        <span className="text-muted block text-[12.5px] font-normal">{description}</span>
+      {/*
+        The label and badge need their own flex row. Previously they sat in a
+        bare <span>, so the link's `items-center` applied to that wrapper as a
+        whole and the badge fell back to inline baseline alignment - sitting
+        low against the text rather than centred on it.
+      */}
+      <span className="flex items-center gap-2 leading-none">
+        {item.label}
+        {item.status ? <StatusBadge status={item.status} size="nav" /> : null}
+      </span>
+      {mobile && item.description ? (
+        <span className="text-muted mt-1 block text-[12.5px] leading-normal font-normal">
+          {item.description}
+        </span>
       ) : null}
     </Link>
   );
@@ -81,19 +95,34 @@ export function Header() {
       >
         <Logo />
 
-        <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">
-          {primaryNav.map((item) => navLink(item.href, item.label))}
+        <nav aria-label="Main" className="hidden items-center gap-6 lg:flex">
+          {primaryNav.map((item) => navLink(item))}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        {/* flex-1 so the search below can absorb whatever width is left after
+            the logo, nav and actions, instead of a fixed size that overflows
+            at 1024px or wastes space at 1440px. */}
+        <div className="hidden flex-1 items-center justify-end gap-3 lg:flex">
+          {/*
+            Sized and labelled like a real search field rather than an icon
+            button. The previous 30px icon-plus-shortcut control read as
+            decoration - nobody clicks a thing they cannot identify, and the
+            shortcut only helps people who already know it is there.
+
+            Fluid between a usable floor and a sensible cap, so it is as wide
+            as the layout can afford at any breakpoint.
+          */}
           <button
             type="button"
             onClick={openCommandPalette}
-            aria-label="Search (Command K)"
-            className="border-border text-muted hover:border-accent hover:text-accent flex items-center gap-2 rounded-[var(--r-btn)] border px-3 py-2 text-[13px] font-medium transition-colors"
+            aria-label="Search the site"
+            className="border-border bg-surface-alt text-muted hover:border-accent hover:text-accent flex h-10 max-w-[340px] min-w-[150px] flex-1 items-center gap-2.5 rounded-[var(--r-btn)] border px-3.5 text-[14px] font-medium transition-colors"
           >
-            <Search aria-hidden="true" className="size-3.5" />
-            <kbd className="font-sans">&#8984;K</kbd>
+            <Search aria-hidden="true" className="size-4 shrink-0" />
+            <span className="flex-1 text-left">Search...</span>
+            <kbd className="border-border bg-surface rounded border px-1.5 py-0.5 font-sans text-[11px] font-semibold">
+              &#8984;K
+            </kbd>
           </button>
 
           <ThemeToggle />
@@ -122,11 +151,25 @@ export function Header() {
 
         <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
           <nav aria-label="Mobile" className="mt-8 flex flex-col gap-1">
-            {primaryNav.map((item) => navLink(item.href, item.label, item.description, true))}
+            {primaryNav.map((item) => navLink(item, true))}
           </nav>
 
+          {/* Search is desktop-only in the bar, so the drawer carries it for
+              phones - otherwise the palette is unreachable without a keyboard. */}
+          <button
+            type="button"
+            onClick={() => {
+              setDrawerOpen(false);
+              openCommandPalette();
+            }}
+            className="border-border text-muted mt-4 flex min-h-12 items-center gap-2.5 rounded-[10px] border px-3 text-[15px] font-medium"
+          >
+            <Search aria-hidden="true" className="size-4" />
+            Search the site
+          </button>
+
           <div className="mt-auto space-y-3 pt-8">
-            <ThemeToggle className="w-fit" />
+            <ThemeToggle />
             <Button href="/login" variant="outline" fullWidth>
               Log In
             </Button>

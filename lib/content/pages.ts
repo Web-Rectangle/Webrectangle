@@ -158,50 +158,6 @@ export const howItWorksPage = {
     'Campaign workspaces and reporting are still being built. Discovery, shortlisting and invitations are what you can use today.',
 } as const;
 
-export const pricingPage = {
-  meta: {
-    title: 'Pricing',
-    description:
-      'WebRectangle is in early access. We price directly with our first brands rather than publishing tiers we would have to change.',
-  },
-  hero: {
-    eyebrow: 'Pricing',
-    title: 'Early access, so we price',
-    highlight: 'with you.',
-    description:
-      'We are working with our first brands directly and setting pricing against real campaigns. Publishing tiers now would mean publishing guesses.',
-  },
-  models: [
-    {
-      title: 'Self-serve',
-      forWho: 'Teams who want to run influencer marketing themselves',
-      body: 'Access to creator discovery, shortlisting, comparison and collaboration invitations. You run the campaign.',
-      includes: [
-        'Creator discovery and filtering',
-        'Shortlists and side-by-side comparison',
-        'Structured collaboration invitations',
-        'Campaign workspace as it ships',
-      ],
-    },
-    {
-      title: 'Managed',
-      forWho: 'Teams who want the campaign run for them',
-      body: 'Our team handles discovery, outreach, negotiation and day-to-day coordination. You approve the decisions that matter.',
-      includes: [
-        'Everything in self-serve',
-        'Curated creator shortlists',
-        'Outreach and follow-up handled',
-        'Campaign coordination and reporting',
-      ],
-    },
-  ],
-  honesty: {
-    title: 'Why there are no numbers on this page',
-    body: 'Campaign budgets, creator counts and scope vary enormously, and we have not run enough campaigns to publish a price that would hold. Tell us what you are planning and you will get a straight number, not a range designed to get you on a call.',
-  },
-  cta: { label: 'Tell us about your campaign', href: '/contact' },
-} as const;
-
 export const aboutPage = {
   meta: {
     title: 'About',

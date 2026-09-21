@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { IsometricMark } from '@/components/brand/isometric-mark';
+import { SiteChrome } from '@/components/layout/site-chrome';
 import { BackgroundLayers } from '@/components/ui/background-layers';
 import { Button } from '@/components/ui/button';
 import { primaryNav } from '@/lib/content/site';
@@ -19,6 +20,17 @@ export const metadata: Metadata = {
  * destinations recovers the visit better than bouncing them to the homepage.
  */
 export default function NotFound() {
+  // Unmatched URLs resolve against the root layout, which no longer carries
+  // the public chrome - so the 404 opts into it explicitly. Without this,
+  // someone who mistypes a URL loses the navigation entirely.
+  return (
+    <SiteChrome>
+      <NotFoundBody />
+    </SiteChrome>
+  );
+}
+
+function NotFoundBody() {
   return (
     <div className="relative flex min-h-[70dvh] items-center overflow-hidden py-20">
       <BackgroundLayers />

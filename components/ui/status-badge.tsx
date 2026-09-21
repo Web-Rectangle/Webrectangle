@@ -43,27 +43,42 @@ export function StatusBadge({
   status,
   className,
   showDot = true,
+  /**
+   * `nav` is a tighter, shorter form for navigation, where the full badge
+   * crowds the link and widens the bar. It reads "Soon" rather than
+   * "Building", because someone scanning a menu needs the implication, not our
+   * internal label.
+   */
+  size = 'default',
 }: {
   status: FeatureStatus;
   className?: string;
   showDot?: boolean;
+  size?: 'default' | 'nav';
 }) {
   const config = CONFIG[status];
+  const nav = size === 'nav';
+  const label = nav && status === 'building' ? 'Soon' : config.label;
 
   return (
     <span
       title={config.description}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-[var(--r-pill)] border px-2.5 py-1',
-        'text-[11px] font-bold tracking-[0.08em] uppercase',
+        'inline-flex shrink-0 items-center justify-center rounded-[var(--r-pill)] border font-bold uppercase',
+        // Explicit height and flat leading in the nav form: relying on padding
+        // plus the inherited 15px line-height made the pill taller than its
+        // text and pushed it off the label's centre line.
+        nav
+          ? 'h-[18px] gap-1 px-1.5 text-[9.5px] leading-none tracking-[0.06em]'
+          : 'gap-1.5 px-2.5 py-1 text-[11px] tracking-[0.08em]',
         config.chip,
         className,
       )}
     >
-      {showDot ? (
+      {showDot && !nav ? (
         <span aria-hidden="true" className={cn('size-1.5 rounded-full', config.dot)} />
       ) : null}
-      {config.label}
+      {label}
       <span className="sr-only">. {config.description}</span>
     </span>
   );

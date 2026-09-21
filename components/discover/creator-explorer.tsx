@@ -69,6 +69,9 @@ export function CreatorExplorer({
     [creators, filters],
   );
 
+  /** Drives whether the sample-data explainer is shown at all. */
+  const sampleCount = useMemo(() => results.filter((c) => c.origin === 'seed').length, [results]);
+
   const compared = useMemo(
     () =>
       compareIds
@@ -121,12 +124,24 @@ export function CreatorExplorer({
 
   return (
     <div className="container-wr">
-      <SampleDataNotice
-        variant="bar"
-        label="Sample creator network"
-        detail="These profiles are illustrative and were created to demonstrate the product. Our real creator network is onboarding now - join the early access list to be told when it opens."
-        className="mb-6"
-      />
+      {/*
+        Only rendered while the results actually contain samples, and worded to
+        describe the marked ones rather than the whole grid. Once every visible
+        profile is a real creator this disappears entirely - continuing to call
+        them illustrative would be false.
+      */}
+      {sampleCount > 0 ? (
+        <SampleDataNotice
+          variant="bar"
+          label={
+            sampleCount === results.length
+              ? 'Sample creator network'
+              : `${sampleCount} of these profiles are samples`
+          }
+          detail="Profiles marked Sample are illustrative and were created to demonstrate the product. Our real creator network is onboarding now."
+          className="mb-6"
+        />
+      ) : null}
 
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* Desktop rail. Sticky so filters stay reachable down a long grid. */}

@@ -34,11 +34,14 @@ export function MobileCtaBar() {
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-[120%] opacity-0',
       )}
     >
-      <Button href="/discover" size="sm" fullWidth>
-        Find Creators
+      {/* Wording matches the hero and the Get in touch section. Sending a
+          brand to /discover instead would drop them onto sample data rather
+          than a way to reach us. */}
+      <Button href="/join/brand" size="sm" fullWidth className="min-h-11">
+        I am a brand
       </Button>
-      <Button href="/join/creator" size="sm" variant="outline" fullWidth>
-        Join as Creator
+      <Button href="/join/creator" size="sm" variant="outline" fullWidth className="min-h-11">
+        I am a creator
       </Button>
     </div>
   );

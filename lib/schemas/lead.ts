@@ -71,9 +71,27 @@ export const leadSchema = z.object({
 
 export type LeadInput = z.infer<typeof leadSchema>;
 
+/**
+ * Review state of a submission.
+ *
+ * Every enquiry lands as `pending`. The admin panel moves creators to
+ * `approved` (which unlocks the profile form that publishes them into
+ * discovery) or `declined`. Brand enquiries use the same states so one queue
+ * covers both audiences.
+ */
+export const SUBMISSION_STATUSES = ['pending', 'approved', 'declined'] as const;
+export const submissionStatusSchema = z.enum(SUBMISSION_STATUSES);
+export type SubmissionStatus = z.infer<typeof submissionStatusSchema>;
+
 export type Lead = LeadInput & {
   id: string;
   createdAt: string;
+  status: SubmissionStatus;
+  reviewedAt?: string;
+  /** Set once an approved creator submission has been published as a profile. */
+  publishedCreatorId?: string;
+  /** Private to the admin panel. Never shown to the person who submitted. */
+  adminNote?: string;
 };
 
 /** Short-form capture used by the early-access and waitlist CTAs. */
@@ -90,4 +108,6 @@ export type WaitlistInput = z.infer<typeof waitlistSchema>;
 export type WaitlistEntry = WaitlistInput & {
   id: string;
   createdAt: string;
+  status: SubmissionStatus;
+  reviewedAt?: string;
 };

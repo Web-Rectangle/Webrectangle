@@ -2,6 +2,7 @@ import type { Creator, CreatorFilters } from '@/lib/schemas/creator';
 import type { Lead, LeadInput, WaitlistEntry, WaitlistInput } from '@/lib/schemas/lead';
 
 import type {
+  CreatorAdminRecord,
   CreatorRepository,
   CreatorSearchResult,
   Facets,
@@ -53,6 +54,10 @@ type CreatorRow = {
   pastCollaborations: number;
   bio: string;
   tier: string;
+  origin: string;
+  hidden: boolean;
+  featured: boolean;
+  featuredOrder: number | null;
 };
 
 type Delegate<Row> = {
@@ -65,6 +70,13 @@ type Delegate<Row> = {
   count(args?: { where?: Where }): Promise<number>;
   groupBy(args: { by: string[]; _count: true }): Promise<Array<Record<string, unknown>>>;
   create(args: { data: Record<string, unknown> }): Promise<Row>;
+  update(args: { where: Where; data: Record<string, unknown> }): Promise<Row>;
+  upsert(args: {
+    where: Where;
+    create: Record<string, unknown>;
+    update: Record<string, unknown>;
+  }): Promise<Row>;
+  delete(args: { where: Where }): Promise<Row>;
 };
 
 type PrismaClientLike = {
@@ -101,6 +113,7 @@ async function loadPrismaClient(): Promise<PrismaClientLike> {
 function toCreator(row: CreatorRow): Creator {
   return {
     id: row.id,
+    origin: (row.origin as Creator['origin']) ?? 'seed',
     handle: row.handle,
     displayName: row.displayName,
     platform: row.platform as Creator['platform'],
@@ -214,6 +227,11 @@ export async function createPrismaRepositories(): Promise<Repositories> {
       return row ? toCreator(row) : null;
     },
 
+    async findById(id: string): Promise<Creator | null> {
+      const row = await db.creator.findFirst({ where: { id } });
+      return row ? toCreator(row) : null;
+    },
+
     async findManyByIds(ids: readonly string[]): Promise<Creator[]> {
       const rows = await db.creator.findMany({ where: { id: { in: [...ids] } } });
       return rows.map(toCreator);
@@ -223,17 +241,111 @@ export async function createPrismaRepositories(): Promise<Repositories> {
       const rows = await db.creator.groupBy({ by: ['city'], _count: true });
       return rows.map((r) => String(r.city)).sort((a, b) => a.localeCompare(b));
     },
+
+    async upsert(creator: Creator): Promise<Creator> {
+      // The nested `audience` object is flattened onto the row; see toCreator
+      // for the inverse mapping.
+      const { audience, ...rest } = creator;
+      const data = { ...rest, ...audience };
+
+      const row = await db.creator.upsert({
+        where: { id: creator.id },
+        create: data,
+        update: data,
+      });
+
+      return toCreator(row);
+    },
+
+    /*
+     * Visibility and ordering are real columns here, not an overlay. The
+     * memory adapter needs a side table because seed profiles come from
+     * read-only JSON; a database row has no such constraint, so the state
+     * lives where it belongs.
+     */
+    async listAll(options): Promise<CreatorAdminRecord[]> {
+      const where: Where = {};
+      if (options?.includeHidden === false) where.hidden = false;
+
+      const rows = await db.creator.findMany({ where, orderBy: { featuredOrder: 'asc' } });
+
+      return rows.map((row) => ({
+        ...toCreator(row),
+        hidden: Boolean(row.hidden),
+        featured: Boolean(row.featured),
+      }));
+    },
+
+    async setHidden(id, hidden): Promise<void> {
+      await db.creator.update({ where: { id }, data: { hidden } });
+    },
+
+    async setFeatured(id, featured): Promise<void> {
+      await db.creator.update({
+        where: { id },
+        data: { featured, featuredOrder: featured ? Date.now() : null },
+      });
+    },
+
+    async reorderFeatured(ids): Promise<void> {
+      // Sequential rather than a transaction: the list is a handful of rows,
+      // and a partial reorder is cosmetically wrong rather than corrupting.
+      for (const [index, id] of ids.entries()) {
+        await db.creator.update({
+          where: { id },
+          data: { featured: true, featuredOrder: index },
+        });
+      }
+    },
+
+    async remove(id): Promise<void> {
+      await db.creator.delete({ where: { id } });
+    },
   };
 
   const leads: LeadRepository = {
     async create(input: LeadInput): Promise<Lead> {
-      return db.lead.create({ data: { ...input } });
+      return db.lead.create({ data: { ...input, status: 'pending' } });
+    },
+
+    async list(filter): Promise<Lead[]> {
+      const where: Where = {};
+      if (filter?.audience) where.audience = filter.audience;
+      if (filter?.status) where.status = filter.status;
+
+      return db.lead.findMany({ where, orderBy: { createdAt: 'desc' } });
+    },
+
+    async findById(id: string): Promise<Lead | null> {
+      return db.lead.findFirst({ where: { id } });
+    },
+
+    async setStatus(id, status): Promise<Lead | null> {
+      return db.lead.update({
+        where: { id },
+        data: { status, reviewedAt: new Date().toISOString() },
+      });
+    },
+
+    async linkPublishedCreator(id, creatorId): Promise<Lead | null> {
+      return db.lead.update({ where: { id }, data: { publishedCreatorId: creatorId } });
+    },
+
+    async setNote(id, note): Promise<Lead | null> {
+      return db.lead.update({ where: { id }, data: { adminNote: note.trim() || null } });
     },
   };
 
   const waitlist: WaitlistRepository = {
     async create(input: WaitlistInput): Promise<WaitlistEntry> {
-      return db.waitlistEntry.create({ data: { ...input } });
+      return db.waitlistEntry.create({ data: { ...input, status: 'pending' } });
+    },
+
+    async list(filter): Promise<WaitlistEntry[]> {
+      const where: Where = {};
+      if (filter?.audience) where.audience = filter.audience;
+
+      return db.waitlistEntry.findMany({ where, orderBy: { createdAt: 'desc' } });
     },
   };
 

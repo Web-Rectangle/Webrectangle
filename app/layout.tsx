@@ -2,13 +2,7 @@ import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
 
-import { CommandPalette } from '@/components/layout/command-palette';
-import { Footer } from '@/components/layout/footer';
-import { Header } from '@/components/layout/header';
-import { MobileCtaBar } from '@/components/layout/mobile-cta-bar';
-import { ScrollProgress } from '@/components/layout/scroll-progress';
 import { SkipLink } from '@/components/layout/skip-link';
-import { WhatsAppFab } from '@/components/layout/whatsapp-fab';
 import { site } from '@/lib/content/site';
 import { env } from '@/lib/env';
 import { inter } from '@/lib/fonts';
@@ -64,21 +58,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // class onto <html> before React hydrates, which is intentional and is what
     // prevents a flash of the wrong theme.
     <html lang="en-IN" className={inter.variable} suppressHydrationWarning>
+      {/*
+        Root layout carries only what every route needs: the document shell,
+        theme provider and skip link. Public chrome lives in the (marketing)
+        group - see components/layout/site-chrome.tsx - so /admin does not
+        inherit a second header, the footer and the floating CTAs.
+      */}
       <body className="flex min-h-dvh flex-col">
         <Providers>
           <SkipLink />
-          <ScrollProgress />
-          <Header />
-
-          {/* The skip link and in-page anchors both target #main. */}
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-
-          <Footer />
-          <WhatsAppFab />
-          <MobileCtaBar />
-          <CommandPalette />
+          {children}
         </Providers>
       </body>
     </html>

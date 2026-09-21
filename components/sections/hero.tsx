@@ -34,22 +34,37 @@ export function Hero() {
 
           <p className="mb-8 max-w-[540px] text-[18px]">{hero.subheadline}</p>
 
+          {/* Both audiences get an equal-weight door. Making a creator hunt
+              for their route behind a brand-first CTA loses half the traffic
+              this page is for. */}
           <div className="mb-9 flex flex-wrap gap-4">
             <Button href={hero.primaryCta.href} size="lg" withArrow>
               {hero.primaryCta.label}
             </Button>
-            <Button href={hero.secondaryCta.href} variant="outline" size="lg">
+            <Button href={hero.secondaryCta.href} variant="outline" size="lg" withArrow>
               {hero.secondaryCta.label}
             </Button>
           </div>
 
-          {/* Capability strip, not a statistics strip. These are things the
-              platform covers, all of which are verifiable on the site. */}
-          <ul className="text-muted flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] font-semibold">
+          {/*
+            Capability strip, not a statistics strip. These are things the
+            platform covers, all verifiable elsewhere on the site.
+
+            SEPARATORS ARE sm-AND-UP ONLY. Each item carried a leading dot, so
+            once the row wrapped on a narrow phone the item pushed to line two
+            began with a dangling separator - it read as broken rather than
+            wrapped. Below 640px the dots are dropped and spacing alone does
+            the work, which wraps cleanly at any width. Above 640px the row
+            fits on one line, so the dots never orphan.
+          */}
+          <ul className="text-muted flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] font-semibold sm:gap-x-3">
             {hero.trustLine.map((item, i) => (
               <li key={item} className="flex items-center gap-3">
                 {i > 0 ? (
-                  <span aria-hidden="true" className="bg-border size-1 rounded-full" />
+                  <span
+                    aria-hidden="true"
+                    className="bg-border hidden size-1 rounded-full sm:block"
+                  />
                 ) : null}
                 {item}
               </li>

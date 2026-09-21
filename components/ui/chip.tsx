@@ -23,7 +23,10 @@ type ChipProps = {
  */
 export function Chip({ children, selected = false, onToggle, removable, className }: ChipProps) {
   const shared = cn(
-    'inline-flex items-center gap-1.5 rounded-[var(--r-pill)] border px-3.5 py-1.5',
+    // min-h-10 rather than padding alone: at py-1.5 these were 32px tall,
+    // well under a comfortable touch target, and the filter rail is used
+    // almost entirely with a thumb on mobile.
+    'inline-flex min-h-10 items-center gap-1.5 rounded-[var(--r-pill)] border px-4 py-2',
     'text-[13.5px] font-semibold transition-colors duration-200',
     selected
       ? 'bg-accent text-accent-contrast border-accent'

@@ -48,8 +48,22 @@ export const audienceSchema = z.object({
   topLocations: z.array(z.string()).min(1),
 });
 
+/**
+ * Where a profile came from.
+ *
+ * `seed` profiles are the illustrative samples in content/seed/creators.json;
+ * `admin` profiles are real creators reviewed and published through the admin
+ * panel. Defaulted so the seed JSON needs no edit, and the distinction matters
+ * because only samples should be labelled as illustrative in the UI - once a
+ * real creator is listed, describing them as sample data is simply false.
+ */
+export const CREATOR_ORIGINS = ['seed', 'admin'] as const;
+export const creatorOriginSchema = z.enum(CREATOR_ORIGINS);
+export type CreatorOrigin = z.infer<typeof creatorOriginSchema>;
+
 export const creatorSchema = z.object({
   id: z.string().min(1),
+  origin: creatorOriginSchema.default('seed'),
   handle: z.string().min(1),
   displayName: z.string().min(1),
   platform: platformSchema,

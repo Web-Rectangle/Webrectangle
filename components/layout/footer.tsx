@@ -99,7 +99,7 @@ function Social({ href, label, icon }: { href: string; label: string; icon: Reac
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="border-border text-body hover:bg-accent hover:border-accent hover:text-accent-contrast flex size-9 items-center justify-center rounded-full border transition-all duration-250 hover:-translate-y-0.5 [&_svg]:size-4"
+      className="border-border text-body hover:bg-accent hover:border-accent hover:text-accent-contrast flex size-11 items-center justify-center rounded-full border transition-all duration-250 hover:-translate-y-0.5 [&_svg]:size-4"
     >
       {icon}
     </a>

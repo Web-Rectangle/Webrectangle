@@ -41,6 +41,23 @@ const schema = z.object({
 
   /** Meeting scheduler embedded on /contact. */
   NEXT_PUBLIC_CAL_LINK: z.string().min(1).optional(),
+
+  /**
+   * Admin panel password.
+   *
+   * Falls back to a well-known development value so the panel is reachable
+   * immediately after a clone. lib/auth/admin.ts refuses to authenticate
+   * against that fallback in production, so a deploy without this set has a
+   * locked admin rather than an open one.
+   */
+  ADMIN_PASSWORD: z.string().min(1).optional(),
+
+  /**
+   * Secret used to sign the admin session cookie. Without it the cookie is
+   * signed with a per-boot random value, which simply means sessions do not
+   * survive a restart - acceptable locally, not in production.
+   */
+  ADMIN_SESSION_SECRET: z.string().min(16).optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -67,6 +84,8 @@ export const features = {
   turnstile: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
   analytics: Boolean(env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN),
   scheduling: Boolean(env.NEXT_PUBLIC_CAL_LINK),
+  /** A real admin password is configured, rather than the dev fallback. */
+  adminConfigured: Boolean(env.ADMIN_PASSWORD),
 } as const;
 
 /** Public business contact details. Referenced by the WhatsApp fallback and footer. */

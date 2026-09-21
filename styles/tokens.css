@@ -58,6 +58,21 @@
   --neutral-900: #0a0f1e;
   --neutral-950: #060a13;
 
+  /*
+   * Violet ramp - the dark-theme companion to brand blue.
+   *
+   * Hue sits around 252deg against the brand's 216deg: close enough to read as
+   * the same family, far enough to give depth in a gradient. Used only in dark
+   * mode, and only on decorative surfaces (aurora, gradient fills), never on
+   * text or a control that carries state. Brand blue remains the accent in
+   * both themes - this adds dimension, it does not share the job.
+   */
+  --violet-300: #a99bff;
+  --violet-400: #8b78ff;
+  --violet-500: #7b61ff;
+  --violet-600: #6344e8;
+  --violet-700: #4b2fc4;
+
   /* Functional. Used sparingly - the brief warns against too many colours. */
   --star: #ffb800;
   --whatsapp: #25d366;
@@ -107,6 +122,25 @@
   --accent-softer: var(--brand-50);
   --accent-contrast: #ffffff;
 
+  /*
+   * Gradient partner for the accent. Light mode keeps it in the blue family so
+   * the palette stays monochrome and disciplined; dark mode shifts it to
+   * violet, where a single blue on near-black flattens out.
+   */
+  --accent-secondary: var(--brand-700);
+
+  /*
+   * Filled brand surfaces that carry white content - the CTA band, icon tiles,
+   * the primary "get in touch" card.
+   *
+   * Deliberately NOT --accent. In dark mode the accent lifts to brand-400 so
+   * it stays legible as a text colour, and white on brand-400 is about 2.4:1 -
+   * nowhere near readable. These two stops are pinned dark enough for white
+   * content in both themes, which is why they are separate tokens.
+   */
+  --brand-fill-from: var(--brand-500);
+  --brand-fill-to: var(--brand-700);
+
   /* Glass. Tuned per theme because the material inverts completely. */
   --glass-bg-sm: rgb(255 255 255 / 0.72);
   --glass-bg-md: rgb(255 255 255 / 0.78);
@@ -143,12 +177,25 @@
 /* 2b. SEMANTIC TOKENS - dark theme                                    */
 /* ------------------------------------------------------------------ */
 
+/*
+ * Dark theme.
+ *
+ * Surfaces carry a deliberate navy cast rather than sitting on neutral black.
+ * Pure grey under a blue accent reads as an inverted light theme; a base that
+ * is already slightly blue lets the brand colour sit in the palette instead of
+ * on top of it.
+ *
+ * Violet appears here and nowhere else. On near-black a single blue has very
+ * little room to move - the gradient from brand-500 to brand-700 collapses to
+ * almost one flat colour - so decorative fills run blue to violet to keep some
+ * depth. Text, controls and state colours stay blue in both themes.
+ */
 .dark {
   color-scheme: dark;
 
-  --surface: #080c16;
-  --surface-alt: #0e1424;
-  --surface-raised: #121a2c;
+  --surface: #070b16;
+  --surface-alt: #0c1322;
+  --surface-raised: #111a2e;
   --surface-inverse: var(--neutral-0);
 
   --ink: #eef2f9;
@@ -161,19 +208,28 @@
 
   --accent: var(--brand-400);
   --accent-hover: var(--brand-300);
-  --accent-soft: rgb(1 101 251 / 0.16);
-  --accent-softer: rgb(1 101 251 / 0.08);
+  --accent-soft: rgb(1 101 251 / 0.18);
+  --accent-softer: rgb(1 101 251 / 0.09);
   --accent-contrast: #05070d;
 
-  --glass-bg-sm: rgb(16 22 40 / 0.62);
-  --glass-bg-md: rgb(16 22 40 / 0.72);
-  --glass-bg-solid: rgb(14 20 36 / 0.97);
+  /* The dark-only shift: gradients run blue into violet. */
+  --accent-secondary: var(--violet-500);
+
+  /* Both stops stay deep enough to keep white content above 4.5:1. */
+  --brand-fill-from: var(--brand-600);
+  --brand-fill-to: var(--violet-700);
+
+  --glass-bg-sm: rgb(17 26 46 / 0.62);
+  --glass-bg-md: rgb(17 26 46 / 0.72);
+  --glass-bg-solid: rgb(12 19 34 / 0.97);
   --glass-border: rgb(255 255 255 / 0.1);
   --glass-highlight: rgb(255 255 255 / 0.08);
 
-  --grid-line: rgb(91 155 253 / 0.06);
-  --aurora-1: rgb(1 101 251 / 0.18);
-  --aurora-2: rgb(1 101 251 / 0.12);
+  --grid-line: rgb(91 155 253 / 0.07);
+  /* Two hues in the backdrop rather than one, so the page has depth behind
+     the glass instead of a single flat wash. */
+  --aurora-1: rgb(1 101 251 / 0.2);
+  --aurora-2: rgb(123 97 255 / 0.16);
   --aurora-3: rgb(4 37 90 / 0.4);
 
   --shadow: 0 8px 30px rgb(0 0 0 / 0.4);
@@ -219,6 +275,9 @@
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-brand-fill-from: var(--brand-fill-from);
+  --color-brand-fill-to: var(--brand-fill-to);
   --color-accent-soft: var(--accent-soft);
   --color-accent-softer: var(--accent-softer);
   --color-accent-contrast: var(--accent-contrast);

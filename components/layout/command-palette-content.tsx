@@ -90,8 +90,8 @@ export function CommandPaletteContent({
           >
             <Item onSelect={() => go('/')} icon={<Compass />} label="Home" />
             {/* Both navs, so pages kept out of the header - How It Works,
-                Pricing, Resources - are still one keystroke away. A search
-                tool that cannot find part of the site is a broken one. */}
+                Resources, About - are still one keystroke away. A search tool
+                that cannot find part of the site is a broken one. */}
             {[...primaryNav, ...secondaryNav].map((item) => (
               <Item
                 key={item.href}

@@ -1,3 +1,4 @@
+import type { FeatureStatus } from '@/components/ui/status-badge';
 import { contact } from '@/lib/env';
 
 /**
@@ -12,7 +13,7 @@ export const site = {
   name: 'WebRectangle',
   /** The one-line answer to "what is WebRectangle?" - used in metadata and JSON-LD. */
   description:
-    'WebRectangle is an influencer marketing platform that helps brands discover the right creators, connect with them, manage collaborations, and measure campaign performance.',
+    'WebRectangle runs influencer marketing and talent management - connecting brands with creators who fit, managing the collaboration end to end, and measuring what the campaign actually did.',
   tagline: 'Find the right creators. Build better campaigns.',
   founders: ['Parth Maheshwari', 'Tarun'],
   contact,
@@ -22,6 +23,12 @@ export type NavItem = {
   label: string;
   href: string;
   description?: string;
+  /**
+   * Marks a destination that is not fully live yet. Rendered as a small pill
+   * beside the label so a visitor knows before they click, rather than working
+   * it out once they are on the page.
+   */
+  status?: FeatureStatus;
 };
 
 /**
@@ -32,14 +39,21 @@ export type NavItem = {
  * then hand them the product. Six items made that choice harder, not easier,
  * and pushed the bar wide enough that labels wrapped onto two lines.
  *
- * How It Works, Pricing and Resources are still full pages; they are reached
+ * How It Works, Resources and About are still full pages; they are reached
  * from the footer, from in-page calls to action, and from the command palette.
  * See secondaryNav.
  */
 export const primaryNav: readonly NavItem[] = [
   { label: 'For Brands', href: '/for-brands', description: 'Find creators and run campaigns' },
   { label: 'For Creators', href: '/for-creators', description: 'Get discovered by brands' },
-  { label: 'Discover Creators', href: '/discover', description: 'Try the discovery experience' },
+  {
+    label: 'Discover Creators',
+    href: '/discover',
+    description: 'Try the discovery experience',
+    // Runs on illustrative sample profiles while the real creator network is
+    // onboarded, so it is flagged in the nav rather than only on the page.
+    status: 'building',
+  },
 ] as const;
 
 /**
@@ -52,17 +66,18 @@ export const primaryNav: readonly NavItem[] = [
  */
 export const secondaryNav: readonly NavItem[] = [
   { label: 'How It Works', href: '/how-it-works', description: 'Discovery through measurement' },
-  { label: 'Pricing', href: '/pricing', description: 'How working with us works' },
   { label: 'Resources', href: '/resources', description: 'Guides and playbooks' },
+  { label: 'About', href: '/about', description: 'Who we are and why' },
 ] as const;
 
 export const footerNav: ReadonlyArray<{ heading: string; items: readonly NavItem[] }> = [
   {
-    heading: 'Platform',
+    heading: 'What we do',
     items: [
+      { label: 'Influencer Marketing', href: '/#offerings' },
+      { label: 'Talent Management', href: '/#offerings' },
       { label: 'Discover Creators', href: '/discover' },
       { label: 'How It Works', href: '/how-it-works' },
-      { label: 'Pricing', href: '/pricing' },
     ],
   },
   {

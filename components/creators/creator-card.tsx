@@ -55,7 +55,7 @@ export function CreatorCard({
         <Avatar name={creator.displayName} seed={creator.handle} />
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {onOpen ? (
               <button
                 type="button"
@@ -70,6 +70,21 @@ export function CreatorCard({
               </span>
             )}
             <PlatformBadge platform={creator.platform} />
+
+            {/*
+              Per-profile, not per-page. A blanket "everything here is sample
+              data" banner starts lying the moment one real creator is
+              published, so the label belongs on the profiles it is actually
+              true of.
+            */}
+            {creator.origin === 'seed' ? (
+              <span
+                title="An illustrative profile created to demonstrate the product. Not a real creator."
+                className="bg-warning-soft text-warning border-warning/25 shrink-0 rounded-[var(--r-pill)] border px-2 py-0.5 text-[10px] font-bold tracking-[0.06em] uppercase"
+              >
+                Sample
+              </span>
+            ) : null}
           </div>
 
           <p className="text-muted truncate text-[13px]">{formatHandle(creator.handle)}</p>
