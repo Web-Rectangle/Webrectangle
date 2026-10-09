@@ -2,13 +2,23 @@ import { randomUUID } from 'node:crypto';
 
 import seed from '@/content/seed/creators.json';
 import { countFacets, matchesFilters, sortCreators } from '@/lib/creators/filter';
+import type {
+  Campaign,
+  CampaignStatus,
+  Invitation,
+  InvitationStatus,
+} from '@/lib/schemas/campaign';
 import { type Creator, type CreatorFilters, creatorSchema } from '@/lib/schemas/creator';
 import type { Lead, LeadInput, WaitlistEntry, WaitlistInput } from '@/lib/schemas/lead';
 
 import type {
+  CampaignInput,
+  CampaignRepository,
   CreatorAdminRecord,
   CreatorRepository,
   CreatorSearchResult,
+  InvitationInput,
+  InvitationRepository,
   LeadRepository,
   Repositories,
   WaitlistRepository,
@@ -66,6 +76,8 @@ type MemoryStore = {
   featuredCreatorIds: string[];
   leads: Lead[];
   waitlist: WaitlistEntry[];
+  campaigns: Campaign[];
+  invitations: Invitation[];
 };
 
 const globalForMemory = globalThis as typeof globalThis & { __wrMemoryStore?: MemoryStore };
@@ -77,6 +89,8 @@ const store: MemoryStore = (globalForMemory.__wrMemoryStore ??= {
   featuredCreatorIds: [],
   leads: [],
   waitlist: [],
+  campaigns: [],
+  invitations: [],
 });
 
 const PUBLISHED_CREATORS = store.publishedCreators;
@@ -290,10 +304,93 @@ const waitlist: WaitlistRepository = {
   },
 };
 
+const campaigns: CampaignRepository = {
+  async create(input: CampaignInput): Promise<Campaign> {
+    const campaign: Campaign = {
+      ...input,
+      id: `cmp-${randomUUID().slice(0, 8)}`,
+      createdAt: new Date().toISOString(),
+      deliverables: input.deliverables ?? [],
+      locations: input.locations ?? [],
+      platforms: input.platforms ?? [],
+    };
+    store.campaigns.push(campaign);
+    return campaign;
+  },
+
+  async findById(id: string): Promise<Campaign | null> {
+    return store.campaigns.find((c) => c.id === id) ?? null;
+  },
+
+  async listByBrand(brandId: string): Promise<Campaign[]> {
+    return store.campaigns
+      .filter((c) => c.brandId === brandId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async updateStatus(id: string, status: CampaignStatus): Promise<Campaign | null> {
+    const campaign = store.campaigns.find((c) => c.id === id);
+    if (!campaign) return null;
+    campaign.status = status;
+    return campaign;
+  },
+};
+
+const invitations: InvitationRepository = {
+  async create(input: InvitationInput): Promise<Invitation> {
+    const existing = store.invitations.find(
+      (i) => i.campaignId === input.campaignId && i.creatorId === input.creatorId,
+    );
+    if (existing) return existing;
+
+    const invitation: Invitation = {
+      id: `inv-${randomUUID().slice(0, 8)}`,
+      campaignId: input.campaignId,
+      creatorId: input.creatorId,
+      status: 'sent',
+      message: input.message,
+      createdAt: new Date().toISOString(),
+    };
+    store.invitations.push(invitation);
+    return invitation;
+  },
+
+  async findById(id: string): Promise<Invitation | null> {
+    return store.invitations.find((i) => i.id === id) ?? null;
+  },
+
+  async listByCreator(creatorId: string): Promise<Invitation[]> {
+    return store.invitations
+      .filter((i) => i.creatorId === creatorId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async listByCampaign(campaignId: string): Promise<Invitation[]> {
+    return store.invitations
+      .filter((i) => i.campaignId === campaignId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  async respond(
+    id: string,
+    status: InvitationStatus,
+    message?: string,
+  ): Promise<Invitation | null> {
+    const invitation = store.invitations.find((i) => i.id === id);
+    if (!invitation) return null;
+    invitation.status = status;
+    invitation.respondedAt = new Date().toISOString();
+    if (message) invitation.message = message;
+    return invitation;
+  },
+};
+
 export const memoryRepositories: Repositories = {
   creators,
   leads,
   waitlist,
+  campaigns,
+  invitations,
   adapter: 'memory',
 };
 
