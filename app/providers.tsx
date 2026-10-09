@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic';
 import { ThemeProvider } from 'next-themes';
 
+import { FirebaseAnalytics } from '@/components/providers/firebase-analytics';
+
 /**
  * Sonner is only ever needed after a form submission, which is far past
  * hydration. Loading it lazily keeps ~13 KB gzipped out of the chunk that
@@ -35,7 +37,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
       storageKey="wr-theme"
     >
+      <FirebaseAnalytics />
       {children}
+
       <Toaster
         position="bottom-center"
         richColors
