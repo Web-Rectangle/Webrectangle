@@ -1,3 +1,9 @@
+import type {
+  Campaign,
+  CampaignStatus,
+  Invitation,
+  InvitationStatus,
+} from '@/lib/schemas/campaign';
 import type { Creator, CreatorFilters } from '@/lib/schemas/creator';
 import type {
   AudienceType,
@@ -102,10 +108,35 @@ export interface WaitlistRepository {
   list(filter?: { audience?: AudienceType }): Promise<WaitlistEntry[]>;
 }
 
+export type CampaignInput = Omit<Campaign, 'id' | 'createdAt'>;
+
+export interface CampaignRepository {
+  create(input: CampaignInput): Promise<Campaign>;
+  findById(id: string): Promise<Campaign | null>;
+  listByBrand(brandId: string): Promise<Campaign[]>;
+  updateStatus(id: string, status: CampaignStatus): Promise<Campaign | null>;
+}
+
+export type InvitationInput = {
+  campaignId: string;
+  creatorId: string;
+  message?: string;
+};
+
+export interface InvitationRepository {
+  create(input: InvitationInput): Promise<Invitation>;
+  findById(id: string): Promise<Invitation | null>;
+  listByCreator(creatorId: string): Promise<Invitation[]>;
+  listByCampaign(campaignId: string): Promise<Invitation[]>;
+  respond(id: string, status: InvitationStatus, message?: string): Promise<Invitation | null>;
+}
+
 export type Repositories = {
   creators: CreatorRepository;
   leads: LeadRepository;
   waitlist: WaitlistRepository;
+  campaigns: CampaignRepository;
+  invitations: InvitationRepository;
   /** Identifies which adapter is active; surfaced by /api/health. */
   adapter: 'memory' | 'prisma';
 };
