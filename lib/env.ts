@@ -24,6 +24,7 @@ const schema = z.object({
    * switch.
    */
   DATABASE_URL: z.string().min(1).optional(),
+  DIRECT_URL: z.string().min(1).optional(),
 
   /** Transactional email. Unset -> notifications fall through to the next channel. */
   RESEND_API_KEY: z.string().min(1).optional(),
@@ -41,6 +42,15 @@ const schema = z.object({
 
   /** Meeting scheduler embedded on /contact. */
   NEXT_PUBLIC_CAL_LINK: z.string().min(1).optional(),
+
+  /** Firebase Client & Analytics configuration. */
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: z.string().min(1).optional(),
 
   /**
    * Admin panel password.
@@ -84,6 +94,8 @@ export const features = {
   turnstile: Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY),
   analytics: Boolean(env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN),
   scheduling: Boolean(env.NEXT_PUBLIC_CAL_LINK),
+  firebase: Boolean(env.NEXT_PUBLIC_FIREBASE_API_KEY && env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  firebaseAnalytics: Boolean(env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID),
   /** A real admin password is configured, rather than the dev fallback. */
   adminConfigured: Boolean(env.ADMIN_PASSWORD),
 } as const;

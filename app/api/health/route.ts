@@ -48,6 +48,8 @@ export async function GET() {
         turnstile: features.turnstile,
         analytics: features.analytics,
         scheduling: features.scheduling,
+        firebase: features.firebase,
+        firebaseAnalytics: features.firebaseAnalytics,
       },
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? 'local',
       timestamp: new Date().toISOString(),
