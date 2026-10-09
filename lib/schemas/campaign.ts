@@ -108,3 +108,43 @@ export const CAMPAIGN_STATUS_LABEL: Record<CampaignStatus, string> = {
   published: 'Published',
   completed: 'Completed',
 };
+
+export const createCampaignSchema = z.object({
+  name: z.string().trim().min(2, 'Campaign name required').max(120),
+  brandId: z.string().trim().min(1, 'Brand ID required'),
+  objective: campaignObjectiveSchema,
+  status: campaignStatusSchema.default('draft'),
+  productOrService: z.string().trim().max(160).optional(),
+  targetAudience: z.string().trim().max(160).optional(),
+  locations: z.array(z.string().trim()).default([]),
+  platforms: z.array(z.string().trim()).default([]),
+  budgetMinor: z.number().int().nonnegative().optional(),
+  currency: z.string().length(3).default('INR'),
+  deliverables: z
+    .array(
+      deliverableSchema.omit({ id: true }).extend({
+        id: z.string().optional(),
+      }),
+    )
+    .default([]),
+  usageRights: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreateCampaignInput = z.infer<typeof createCampaignSchema>;
+
+export const createInvitationSchema = z.object({
+  creatorId: z.string().min(1, 'Creator ID required'),
+  message: z.string().trim().max(2000).optional(),
+});
+
+export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
+
+export const respondInvitationSchema = z.object({
+  status: invitationStatusSchema.refine((s) => s !== 'sent', {
+    message: 'Response status must be accepted, rejected, or changes-requested',
+  }),
+  message: z.string().trim().max(2000).optional(),
+});
+
+export type RespondInvitationInput = z.infer<typeof respondInvitationSchema>;
