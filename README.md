@@ -27,9 +27,11 @@ upgrades capabilities; leaving them unset never breaks one. See [`.env.example`]
 | `npm run dev`          | Development server                                                   |
 | `npm run build`        | Production build                                                     |
 | `npm run check`        | Typecheck, lint and format check in one pass                         |
+| `npm run test:api`     | Run automated backend & database API integration test suite          |
 | `npm run lint:fix`     | Autofix lint and import ordering                                     |
 | `node scripts/check-honesty.mjs`  | Scan copy for fabricated statistics (see below)           |
 | `node scripts/measure-bundle.mjs` | Report per-route JavaScript weight                        |
+
 
 ---
 
